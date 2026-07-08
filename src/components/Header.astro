@@ -1,0 +1,837 @@
+---
+import { SITE_TITLE } from "../consts";
+import HeaderLink from "./HeaderLink.astro";
+---
+
+<header
+    transition:persist="page-header"
+    style="position: sticky; top: 0; z-index: 100; padding: 0 1.5em; background: var(--background-color);"
+>
+    <nav>
+        <div class="nav-top-row">
+            <a href="/" class="site-title">{SITE_TITLE}</a>
+            <button
+                class="mobile-menu-btn"
+                aria-label="菜单"
+                aria-expanded="false"
+            >
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+        <div class="nav-right">
+            <div class="nav-links">
+                <HeaderLink href="/">首页</HeaderLink>
+                <HeaderLink href="/blog">文章</HeaderLink>
+                <HeaderLink href="/thoughts">碎碎念</HeaderLink>
+                <HeaderLink href="/friends">友链</HeaderLink>
+            </div>
+            <div class="theme-dropdown">
+                <button
+                    class="theme-btn"
+                    aria-label="主题切换"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                >
+                    <span class="theme-btn__icon">
+                        <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            ><circle cx="12" cy="12" r="5"></circle><line
+                                x1="12"
+                                y1="1"
+                                x2="12"
+                                y2="3"></line><line
+                                x1="12"
+                                y1="21"
+                                x2="12"
+                                y2="23"></line><line
+                                x1="4.22"
+                                y1="4.22"
+                                x2="5.64"
+                                y2="5.64"></line><line
+                                x1="18.36"
+                                y1="18.36"
+                                x2="19.78"
+                                y2="19.78"></line><line
+                                x1="1"
+                                y1="12"
+                                x2="3"
+                                y2="12"></line><line
+                                x1="21"
+                                y1="12"
+                                x2="23"
+                                y2="12"></line><line
+                                x1="4.22"
+                                y1="19.78"
+                                x2="5.64"
+                                y2="18.36"></line><line
+                                x1="18.36"
+                                y1="5.64"
+                                x2="19.78"
+                                y2="4.22"></line></svg
+                        >
+                    </span>
+                </button>
+                <div class="theme-menu" role="menu" aria-label="选择主题">
+                    <div class="theme-menu__arrow"></div>
+                    <button
+                        role="menuitem"
+                        data-theme="light"
+                        aria-label="亮色主题"
+                    >
+                        <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            ><circle cx="12" cy="12" r="5"></circle><line
+                                x1="12"
+                                y1="1"
+                                x2="12"
+                                y2="3"></line><line
+                                x1="12"
+                                y1="21"
+                                x2="12"
+                                y2="23"></line><line
+                                x1="4.22"
+                                y1="4.22"
+                                x2="5.64"
+                                y2="5.64"></line><line
+                                x1="18.36"
+                                y1="18.36"
+                                x2="19.78"
+                                y2="19.78"></line><line
+                                x1="1"
+                                y1="12"
+                                x2="3"
+                                y2="12"></line><line
+                                x1="21"
+                                y1="12"
+                                x2="23"
+                                y2="12"></line><line
+                                x1="4.22"
+                                y1="19.78"
+                                x2="5.64"
+                                y2="18.36"></line><line
+                                x1="18.36"
+                                y1="5.64"
+                                x2="19.78"
+                                y2="4.22"></line></svg
+                        >
+                        亮色
+                    </button>
+                    <button
+                        role="menuitem"
+                        data-theme="dark"
+                        aria-label="暗色主题"
+                    >
+                        <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            ><path
+                                d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+                            ></path></svg
+                        >
+                        暗色
+                    </button>
+                    <button
+                        role="menuitem"
+                        data-theme="system"
+                        aria-label="跟随系统"
+                    >
+                        <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            ><rect
+                                x="2"
+                                y="3"
+                                width="20"
+                                height="14"
+                                rx="2"
+                                ry="2"></rect><line
+                                x1="8"
+                                y1="21"
+                                x2="16"
+                                y2="21"></line><line
+                                x1="12"
+                                y1="17"
+                                x2="12"
+                                y2="21"></line></svg
+                        >
+                        系统
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<script>
+    declare global {
+        interface Window {
+            __themeSystemHandler: ((e: MediaQueryListEvent) => void) | null;
+            __themeSystemQuery: MediaQueryList;
+        }
+    }
+
+    // Nav active-state: needs to re-run on every navigation
+    function updateActiveNav() {
+        const links = document.querySelectorAll(".nav-links a");
+        const path = window.location.pathname.replace(/\/$/, "") || "/";
+        links.forEach((link) => {
+            const href = link.getAttribute("href")?.replace(/\/$/, "") || "";
+            link.classList.toggle("active", path === href);
+        });
+    }
+
+    // Re-apply theme from localStorage after each navigation
+    // (BaseHead's anti-FOUC script does not reliably re-execute during view transitions)
+    function restoreTheme() {
+        const KEY = "theme";
+        const DARK = "dark";
+        const LIGHT = "light";
+        const SYSTEM = "system";
+
+        const stored = localStorage.getItem(KEY) || SYSTEM;
+        let resolved;
+        if (stored === DARK) resolved = DARK;
+        else if (stored === LIGHT) resolved = LIGHT;
+        else
+            resolved = window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? DARK
+                : LIGHT;
+
+        document.documentElement.dataset.theme = resolved;
+
+        // Sync the dropdown button icon & active menu item
+        const iconContainer =
+            document.querySelector<HTMLElement>(".theme-btn__icon");
+        if (iconContainer) {
+            const icons = {
+                light: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`,
+                dark: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`,
+                system: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,
+            };
+            iconContainer.innerHTML =
+                icons[stored as keyof typeof icons] || icons.light;
+        }
+
+        const items = document.querySelectorAll<HTMLButtonElement>(
+            '.theme-menu [role="menuitem"]',
+        );
+        items.forEach((item) => {
+            const isActive = item.dataset.theme === stored;
+            item.classList.toggle("active", isActive);
+            item.setAttribute("aria-checked", String(isActive));
+        });
+    }
+
+    document.addEventListener("astro:before-swap", () => {
+        // Ensure theme persists on <html> during view transition swap.
+        // The anti-FOUC inline script may not re-execute reliably,
+        // and without data-theme the CSS falls back to light variables.
+        restoreTheme();
+    });
+
+    document.addEventListener("astro:after-swap", () => {
+        updateActiveNav();
+        restoreTheme();
+    });
+    updateActiveNav();
+
+    // --- Theme dropdown: only initialize once ---
+    (function () {
+        const KEY = "theme";
+        const DARK = "dark";
+        const LIGHT = "light";
+        const SYSTEM = "system";
+
+        const icons = {
+            light: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`,
+            dark: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`,
+            system: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,
+        };
+
+        const container =
+            document.querySelector<HTMLElement>(".theme-dropdown");
+        const btn = container?.querySelector<HTMLButtonElement>(".theme-btn");
+        const menu = container?.querySelector<HTMLElement>(".theme-menu");
+        const iconContainer =
+            container?.querySelector<HTMLElement>(".theme-btn__icon");
+        const items =
+            menu?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]');
+        if (!container || !btn || !menu || !iconContainer || !items?.length)
+            return;
+
+        // Guard: skip re-initialization after view transitions
+        if (container.dataset.themeReady) return;
+        container.dataset.themeReady = "true";
+
+        function resolve(theme: string): string {
+            if (theme === DARK) return DARK;
+            if (theme === LIGHT) return LIGHT;
+            return window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? DARK
+                : LIGHT;
+        }
+
+        function updateButtonIcon(theme: string) {
+            iconContainer!.innerHTML =
+                icons[theme as keyof typeof icons] || icons.light;
+        }
+
+        function setActive(theme: string, animate = false) {
+            const resolved = resolve(theme);
+
+            function apply() {
+                document.documentElement.dataset.theme = resolved;
+                localStorage.setItem(KEY, theme);
+                updateButtonIcon(theme);
+
+                items!.forEach((item) => {
+                    const isActive = item.dataset.theme === theme;
+                    item.classList.toggle("active", isActive);
+                    item.setAttribute("aria-checked", String(isActive));
+                });
+
+                if (theme === SYSTEM) {
+                    if (!window.__themeSystemHandler) {
+                        const handler = (e: MediaQueryListEvent) => {
+                            document.documentElement.dataset.theme = e.matches
+                                ? DARK
+                                : LIGHT;
+                        };
+                        window.__themeSystemQuery.addEventListener(
+                            "change",
+                            handler,
+                        );
+                        window.__themeSystemHandler = handler;
+                    }
+                } else {
+                    if (window.__themeSystemHandler) {
+                        window.__themeSystemQuery.removeEventListener(
+                            "change",
+                            window.__themeSystemHandler,
+                        );
+                        window.__themeSystemHandler = null;
+                    }
+                }
+
+                closeMenu();
+            }
+
+            if (animate && document.startViewTransition) {
+                const activeItem = container!.querySelector<HTMLButtonElement>(
+                    `[role="menuitem"][data-theme="${theme}"]`,
+                );
+                const rect = activeItem?.getBoundingClientRect();
+                if (rect) {
+                    const cx = rect.left + rect.width / 2;
+                    const cy = rect.top + rect.height / 2;
+                    document.documentElement.style.setProperty(
+                        "--reveal-x",
+                        `${cx}px`,
+                    );
+                    document.documentElement.style.setProperty(
+                        "--reveal-y",
+                        `${cy}px`,
+                    );
+                }
+
+                document.documentElement.setAttribute(
+                    "data-theme-transition",
+                    "",
+                );
+                const vt = document.startViewTransition(() => apply());
+                vt.finished.then(() => {
+                    document.documentElement.removeAttribute(
+                        "data-theme-transition",
+                    );
+                });
+            } else {
+                apply();
+            }
+        }
+
+        function openMenu() {
+            menu!.dataset.open = "true";
+            btn!.setAttribute("aria-expanded", "true");
+            // Ensure dropdown isn't clipped by mobile nav-right overflow:hidden
+            const navRight = document.querySelector<HTMLElement>(".nav-right");
+            if (navRight && navRight.dataset.mobileOpen === "true") {
+                navRight.style.overflow = "visible";
+            }
+        }
+
+        function closeMenu() {
+            menu!.dataset.open = "false";
+            btn!.setAttribute("aria-expanded", "false");
+            const navRight = document.querySelector<HTMLElement>(".nav-right");
+            if (navRight && navRight.dataset.mobileOpen === "true") {
+                navRight.style.overflow = "";
+            }
+        }
+
+        function toggleMenu() {
+            if (menu!.dataset.open === "true") {
+                closeMenu();
+            } else {
+                openMenu();
+            }
+        }
+
+        const stored = localStorage.getItem(KEY) || SYSTEM;
+        setActive(stored);
+
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            toggleMenu();
+        });
+
+        items.forEach((item) => {
+            item.addEventListener("click", () => {
+                setActive(item.dataset.theme!, true);
+            });
+        });
+
+        // Close when clicking outside
+        document.addEventListener("click", (e) => {
+            if (menu!.dataset.open !== "true") return;
+            if (!container!.contains(e.target as Node)) {
+                closeMenu();
+            }
+        });
+
+        // Close on Escape
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && menu!.dataset.open === "true") {
+                closeMenu();
+                btn!.focus();
+            }
+        });
+    })();
+
+    // --- Mobile menu toggle ---
+    (function () {
+        const btn =
+            document.querySelector<HTMLButtonElement>(".mobile-menu-btn");
+        const navRight = document.querySelector<HTMLElement>(".nav-right");
+        if (!btn || !navRight) return;
+
+        const _navRight = navRight!;
+        const _btn = btn!;
+
+        function closeMenu() {
+            _navRight.dataset.mobileOpen = "false";
+            _btn.setAttribute("aria-expanded", "false");
+        }
+
+        function toggleMenu() {
+            const isOpen = _navRight.dataset.mobileOpen === "true";
+            const newOpen = !isOpen;
+            _navRight.dataset.mobileOpen = String(newOpen);
+            _btn.setAttribute("aria-expanded", String(newOpen));
+        }
+
+        btn.addEventListener("click", toggleMenu);
+
+        // Close when a nav link is clicked (delegated, survives view transitions)
+        navRight.addEventListener("click", (e) => {
+            if ((e.target as HTMLElement).closest(".nav-links a")) {
+                closeMenu();
+            }
+        });
+
+        // Close when clicking outside the nav
+        document.addEventListener("click", (e) => {
+            if (navRight.dataset.mobileOpen !== "true") return;
+            const target = e.target as HTMLElement;
+            if (!target.closest("nav")) {
+                closeMenu();
+            }
+        });
+
+        // Reset on resize to desktop
+        const mq = window.matchMedia("(min-width: 721px)");
+        mq.addEventListener("change", (e) => {
+            if (e.matches) closeMenu();
+        });
+    })();
+</script>
+
+<style>
+    header {
+        transition: border-color 1s;
+    }
+
+    nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        max-width: 960px;
+        margin: 0 auto;
+        height: 3.5em;
+        border-bottom: 1px solid var(--semi-accent-color);
+        transition: border-color 1s;
+    }
+
+    .site-title {
+        font-size: 1.15em;
+        font-weight: 600;
+        color: var(--normal-text-color);
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .nav-top-row {
+        display: flex;
+        align-items: center;
+    }
+
+    .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 0.75em;
+    }
+
+    /* ---- Mobile menu button (hidden on desktop) ---- */
+    .mobile-menu-btn {
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 4px;
+        width: 36px;
+        height: 36px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 6px;
+        color: var(--semi-accent-color);
+        flex-shrink: 0;
+    }
+
+    /*.mobile-menu-btn:hover {
+			background: rgba(0,0,0,0.05);
+		}
+
+		[data-theme="dark"] .mobile-menu-btn:hover {
+			background: var(--shadow-color);
+		}*/
+
+    .hamburger-line {
+        display: block;
+        width: 20px;
+        height: 2px;
+        background: currentColor;
+        border-radius: 2px;
+        transition:
+            transform 0.3s,
+            opacity 0.3s;
+    }
+
+    .nav-links {
+        display: flex;
+        align-self: stretch;
+    }
+
+    /* Hide 首页 tab on desktop (site-title serves as home) */
+    .nav-links :global(a:first-child) {
+        display: none;
+    }
+
+    /* Tab — stretched to nav height, so its bottom = nav bottom = divider line */
+    .nav-links :global(a) {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        padding: 0 0.75em;
+        font-size: 0.92em;
+        font-weight: 500;
+        color: var(--semi-accent-color);
+        text-decoration: none;
+        transition: color 0.2s;
+        white-space: nowrap;
+    }
+
+    /* Inactive bar = transparent → divider line shows through.
+	   Active bar = accent color → visually replaces that segment of the divider. */
+    .nav-links :global(a)::after {
+        content: "";
+        position: absolute;
+        inset: auto 0 -1px 0;
+        height: 2px;
+        background: transparent;
+        transition: background 0.2s;
+    }
+
+    .nav-links :global(a:hover) {
+        color: var(--normal-text-color);
+    }
+
+    .nav-links :global(a:hover)::after {
+        background: var(--semi-accent-color);
+    }
+
+    .nav-links :global(a.active) {
+        color: var(--accent-color);
+    }
+
+    .nav-links :global(a.active)::after {
+        background: var(--accent-color);
+    }
+
+    /* ---- Theme dropdown ---- */
+    .theme-dropdown {
+        position: relative;
+        display: inline-flex;
+        flex-shrink: 0;
+    }
+
+    .theme-btn {
+        width: 32px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        background: transparent;
+        color: var(--semi-accent-color);
+        cursor: pointer;
+        transition:
+            color 0.25s,
+            border-color 0.25s,
+            box-shadow 0.3s;
+        padding: 0;
+        box-shadow: none;
+    }
+
+    .theme-btn:hover {
+        color: var(--accent-color);
+        border: 1px solid var(--accent-color);
+        box-shadow: -4px 5px 2px 1px var(--shadow-color);
+    }
+
+    .theme-btn:active {
+        box-shadow: -2px 3px 1px 1px var(--shadow-color);
+    }
+
+    .theme-btn__icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 0;
+    }
+
+    .theme-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: -4px;
+        min-width: 78px;
+        background: var(--background-color);
+        border: 1px solid var(--semi-accent-color);
+        box-shadow: -4px 5px 2px 1px var(--shadow-color);
+        padding: 4px;
+        z-index: 200;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-4px);
+        transition:
+            opacity 0.2s,
+            visibility 0.2s,
+            transform 0.2s;
+    }
+
+    .theme-menu[data-open="true"] {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    /* Left-pointing arrow tip (aligned under the button on the right) */
+    .theme-menu__arrow {
+        position: absolute;
+        top: -5px;
+        right: 14px;
+        width: 0;
+        height: 0;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-bottom: 5px solid var(--semi-accent-color);
+    }
+
+    .theme-menu__arrow::after {
+        content: "";
+        position: absolute;
+        top: 1px;
+        left: -4px;
+        width: 0;
+        height: 0;
+        border-left: 4px solid transparent;
+        border-right: 4px solid transparent;
+        border-bottom: 4px solid var(--background-color);
+    }
+
+    .theme-menu [role="menuitem"] {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        width: 100%;
+        padding: 5px 8px;
+        border: none;
+        background: transparent;
+        color: var(--semi-accent-color);
+        cursor: pointer;
+        font-size: 0.85em;
+        font-family: inherit;
+        white-space: nowrap;
+        line-height: 1;
+        transition: color 0.15s;
+    }
+
+    .theme-menu [role="menuitem"] svg {
+        display: block;
+        flex-shrink: 0;
+    }
+
+    .theme-menu [role="menuitem"]:hover {
+        color: var(--accent-color);
+    }
+
+    .theme-menu [role="menuitem"].active {
+        color: var(--accent-color);
+    }
+
+    /* ---- Mobile ---- */
+    @media (max-width: 720px) {
+        header {
+            padding: 0 1em;
+        }
+        nav {
+            flex-direction: column;
+            height: auto;
+            padding: 0.5em 0;
+            gap: 0;
+        }
+
+        /* Top row: site-title + hamburger, full width */
+        .nav-top-row {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .site-title {
+            font-size: 0.92em;
+            line-height: 1;
+        }
+
+        /* Show hamburger button */
+        .mobile-menu-btn {
+            display: flex;
+        }
+
+        /* ---- Collapsible nav-right ---- */
+        .nav-right {
+            width: 100%;
+            justify-content: space-between;
+            gap: 0.3em;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            margin-top: 0;
+            padding: 0 0.2em;
+            transition:
+                max-height 0.35s ease,
+                opacity 0.3s ease,
+                margin-top 0.35s ease,
+                padding 0.35s ease;
+        }
+
+        .nav-right[data-mobile-open="true"] {
+            max-height: 200px;
+            opacity: 1;
+            margin-top: 0.5em;
+            padding: 0.3em 0.2em;
+        }
+
+        .theme-dropdown {
+            order: 0;
+        }
+
+        .theme-menu {
+            left: 0;
+            right: auto;
+        }
+
+        .theme-menu__arrow {
+            left: 10px;
+            right: auto;
+        }
+
+        .nav-links {
+            align-self: auto;
+            order: 1;
+        }
+        /* Show 首页 tab on mobile */
+        .nav-links :global(a:first-child) {
+            display: inline-flex;
+        }
+        .nav-links :global(a) {
+            font-size: 0.92em;
+            padding: 0.3em 0.7em;
+        }
+
+        /* ---- Hamburger → X animation ---- */
+        .mobile-menu-btn[aria-expanded="true"] .hamburger-line:nth-child(1) {
+            transform: translateY(6px) rotate(45deg);
+        }
+        .mobile-menu-btn[aria-expanded="true"] .hamburger-line:nth-child(2) {
+            opacity: 0;
+        }
+        .mobile-menu-btn[aria-expanded="true"] .hamburger-line:nth-child(3) {
+            transform: translateY(-6px) rotate(-45deg);
+        }
+    }
+
+    @media (max-width: 400px) {
+        header {
+            padding: 0 0.6em;
+        }
+        nav {
+            padding: 0.4em 0;
+            gap: 0;
+        }
+        .site-title {
+            font-size: 0.85em;
+        }
+        .nav-links :global(a) {
+            font-size: 0.85em;
+            padding: 0.25em 0.55em;
+        }
+    }
+</style>

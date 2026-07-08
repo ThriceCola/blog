@@ -1,0 +1,79 @@
+---
+import BaseHead from "../components/BaseHead.astro";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import LoadingBar from "../components/LoadingBar.astro";
+import FriendsList from "../components/FriendsList.vue";
+import { ClientRouter } from "astro:transitions";
+---
+
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <BaseHead
+            title="友链 — ThriceCola's Blog"
+            description="ThriceCola 的朋友们"
+        />
+        <ClientRouter />
+        <LoadingBar />
+        <style>
+            .friends-guide {
+                margin-bottom: 2.5em;
+            }
+
+            .friends-guide h2 {
+                margin: 0 0 0.5em;
+                font-size: 1.1em;
+                color: var(--normal-text-color);
+            }
+
+            .friends-guide p {
+                margin-bottom: 0.8em;
+            }
+
+            .friends-guide pre {
+                padding: 0.6em 0.8em;
+                border-left: 3px solid var(--semi-accent-color);
+                border-radius: 0 6px 6px 0;
+                background: none;
+                font-size: 0.85em;
+            }
+
+            @media (max-width: 720px) {
+                .friends-guide {
+                    margin-bottom: 1.5em;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <Header />
+        <main>
+            <div class="page-header">
+                <h1>友链</h1>
+                <p>一些有意思的朋友和站点</p>
+            </div>
+
+            <div class="friends-guide">
+                <h2>想交换友链？</h2>
+                <p>
+                    去 <a
+                        href="https://github.com/ThriceCola/blog/blob/main/public/friends.toml"
+                        target="_blank"
+                        rel="noopener">GitHub 上的 friends.toml</a
+                    >
+                    新增如下格式的信息，然后发起 Pull Request 即可
+                </p>
+                <pre><code>[ThriceCola]
+name = "三瓶可乐不过岗"
+url = "https://thricecola.com"
+avatar = "https://thricecola.com/assets/512-t_MlOS14.jpg"
+description = "看看~ 看看~"
+rss = "https://blog.thricecola.com/rss.xml"</code></pre>
+            </div>
+
+            <FriendsList client:load />
+        </main>
+        <Footer />
+    </body>
+</html>

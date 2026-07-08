@@ -1,0 +1,295 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseHead from "../components/BaseHead.astro";
+import Footer from "../components/Footer.astro";
+import FormattedDate from "../components/FormattedDate.astro";
+import Header from "../components/Header.astro";
+import LoadingBar from "../components/LoadingBar.astro";
+import { ClientRouter } from "astro:transitions";
+import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
+
+const [latestBlog] = (await getCollection("blog")).sort(
+    (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+const [latestThought] = (await getCollection("thoughts")).sort(
+    (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+const { Content: ThoughtContent } = await render(latestThought);
+---
+
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+        <ClientRouter />
+        <LoadingBar />
+        <style>
+            .hero {
+                text-align: center;
+                padding: 4em 1em 2em;
+            }
+            .hero h1 {
+                font-size: 2.5em;
+                margin-bottom: 0.5em;
+            }
+            .hero p {
+                color: var(--semi-accent-color);
+                font-size: 1.2em;
+                max-width: 480px;
+                margin: 0 auto;
+            }
+            .links {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 1em;
+                padding: 0 1em 3em;
+            }
+            .link-card {
+                padding: 22px 36px;
+                text-align: center;
+                min-width: 200px;
+            }
+            .link-card h2 {
+                font-size: 1.2em;
+                margin: 0;
+                color: var(--accent-color);
+            }
+            .link-card p {
+                margin: 0.5em 0 0;
+                color: var(--semi-accent-color);
+                font-size: 0.95em;
+            }
+            .link-card a {
+                text-decoration: none;
+                color: inherit;
+                display: block;
+            }
+            .link-card a:hover h2 {
+                text-decoration: none;
+            }
+
+            .recent {
+                max-width: 720px;
+                margin: 0 auto;
+                padding: 0 1em 4em;
+                display: flex;
+                flex-direction: column;
+                gap: 2.25em;
+            }
+            .recent-card {
+                padding: 28px 36px;
+            }
+            .recent-card-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1em;
+                padding-bottom: 0.75em;
+                border-bottom: 1px dashed var(--semi-accent-color);
+            }
+            .recent-card-type {
+                font-size: 0.9em;
+                color: var(--accent-color);
+                font-weight: 600;
+            }
+            .recent-card-header time {
+                font-size: 0.85em;
+                color: var(--semi-accent-color);
+            }
+            .recent-card-body {
+                font-size: 0.95em;
+                line-height: 1.75;
+                color: var(--normal-text-color);
+                overflow-wrap: break-word;
+            }
+            .recent-card-body p {
+                margin: 0 0 0.6em;
+            }
+            .recent-card-body p:last-child {
+                margin-bottom: 0;
+            }
+            .recent-card-body a {
+                color: var(--accent-color);
+            }
+            .recent-card-title-link {
+                text-decoration: none;
+                color: inherit;
+            }
+            .recent-card-title {
+                margin: 0 0 0.5em;
+                font-size: 1.25em;
+                color: var(--normal-text-color);
+                transition: color 0.2s;
+            }
+            .recent-card-title-link:hover .recent-card-title {
+                color: var(--accent-color);
+            }
+            .recent-card-desc {
+                margin: 0 0 1em;
+                color: var(--semi-accent-color);
+                font-size: 0.95em;
+                line-height: 1.6;
+            }
+            .recent-card-links {
+                display: flex;
+                gap: 1.5em;
+                margin-top: 0.5em;
+            }
+            .recent-card-more {
+                display: inline-block;
+                margin-top: 1em;
+                font-size: 0.9em;
+                color: var(--accent-color);
+                text-decoration: none;
+                transition: opacity 0.2s;
+            }
+            .recent-card-more:hover {
+                opacity: 0.75;
+            }
+
+            @media (max-width: 640px) {
+                .hero h1 {
+                    font-size: 1.8em;
+                }
+                .hero p {
+                    font-size: 1em;
+                }
+                .link-card {
+                    min-width: 140px;
+                    padding: 16px 24px;
+                }
+                .recent-card {
+                    padding: 20px 22px;
+                }
+                .recent-card-header {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 0.3em;
+                }
+            }
+
+            @media (max-width: 480px) {
+                .hero {
+                    padding: 2.5em 1em 1.5em;
+                }
+                .hero h1 {
+                    font-size: 1.5em;
+                }
+                .hero p {
+                    font-size: 0.9em;
+                }
+                .links {
+                    gap: 0.75em;
+                    padding: 0 0.75em 2em;
+                }
+                .link-card {
+                    min-width: 120px;
+                    padding: 14px 18px;
+                    flex: 1 1 120px;
+                }
+                .link-card h2 {
+                    font-size: 1.05em;
+                }
+                .link-card p {
+                    font-size: 0.85em;
+                }
+                .recent {
+                    padding: 0 0.75em 2.5em;
+                    gap: 1.5em;
+                }
+                .recent-card {
+                    padding: 16px 16px;
+                }
+                .recent-card-header {
+                    margin-bottom: 0.75em;
+                    padding-bottom: 0.5em;
+                }
+                .recent-card-body {
+                    font-size: 0.9em;
+                }
+                .recent-card-links {
+                    flex-direction: column;
+                    gap: 0.5em;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <Header />
+        <main>
+            <div class="hero">
+                <h1>{SITE_TITLE}</h1>
+                <h3 style="color: var(--semi-accent-color);font-size: 1.2em;">
+                    {SITE_DESCRIPTION}
+                </h3>
+                <p>你是从哪里找到我的呢?</p>
+            </div>
+            <div class="links">
+                <div class="link-card card card--hover">
+                    <a href="/blog">
+                        <h2>文章</h2>
+                        <p>阅读一些长文</p>
+                    </a>
+                </div>
+                <div class="link-card card card--hover">
+                    <a href="/thoughts">
+                        <h2>碎碎念</h2>
+                        <p>日常与碎片记录</p>
+                    </a>
+                </div>
+            </div>
+
+            <div class="recent">
+                <!-- 碎碎念卡片 -->
+                <article class="recent-card card card--hover">
+                    <div class="recent-card-header">
+                        <span class="recent-card-type">最新碎碎念</span>
+                        <FormattedDate date={latestThought.data.pubDate} />
+                    </div>
+                    <div class="recent-card-body thought-content">
+                        <ThoughtContent />
+                    </div>
+                    <a href="/thoughts" class="recent-card-more"
+                        >查看更多碎碎念 →</a
+                    >
+                </article>
+
+                <!-- 文章卡片 -->
+                <article class="recent-card card card--hover">
+                    <div class="recent-card-header">
+                        <span class="recent-card-type">最新文章</span>
+                        <FormattedDate date={latestBlog.data.pubDate} />
+                    </div>
+                    <a
+                        href={`/blog/${latestBlog.id}/`}
+                        class="recent-card-title-link"
+                    >
+                        <h3 class="recent-card-title">
+                            {latestBlog.data.title}
+                        </h3>
+                    </a>
+                    {
+                        latestBlog.data.description && (
+                            <p class="recent-card-desc line-clamp-3">
+                                {latestBlog.data.description}
+                            </p>
+                        )
+                    }
+                    <div class="recent-card-links">
+                        <a
+                            href={`/blog/${latestBlog.id}/`}
+                            class="recent-card-more">阅读全文 →</a
+                        >
+                        <a href="/blog" class="recent-card-more"
+                            >查看更多文章 →</a
+                        >
+                    </div>
+                </article>
+            </div>
+        </main>
+        <Footer />
+    </body>
+</html>

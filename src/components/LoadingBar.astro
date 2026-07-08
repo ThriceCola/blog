@@ -1,0 +1,188 @@
+<!-- 几何方框加载指示器 -->
+<style is:global>
+    #loading-bar {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        pointer-events: none;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+
+        opacity: 0;
+    }
+
+    #loading-bar.loading,
+    #loading-bar.exiting {
+        opacity: 1;
+    }
+
+    /* ---- 卡片式方框：复用 blog 的 card 风格 ---- */
+    #loading-bar span {
+        display: block;
+        width: 28px;
+        height: 28px;
+        border: 1px solid var(--semi-accent-color);
+        background: var(--background-color);
+        box-shadow: -6px 8px 2px 1px var(--shadow-color);
+        opacity: 0;
+    }
+
+    /* ---- 入场：旋转 + 缩放出现 ---- */
+    #loading-bar.loading span {
+        animation: box-enter 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    #loading-bar.loading span:nth-child(1) {
+        animation-delay: 0s;
+    }
+    #loading-bar.loading span:nth-child(2) {
+        animation-delay: 0.1s;
+    }
+    #loading-bar.loading span:nth-child(3) {
+        animation-delay: 0.2s;
+    }
+
+    @keyframes box-enter {
+        from {
+            opacity: 0;
+            transform: scale(0) rotate(-45deg);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) rotate(0deg);
+        }
+    }
+
+    /* ---- 浮动：波浪呼吸 ---- */
+    #loading-bar.floating span {
+        animation: box-wave 1s ease-in-out infinite;
+        opacity: 0.3;
+    }
+    #loading-bar.floating span:nth-child(1) {
+        animation-delay: 0s;
+    }
+    #loading-bar.floating span:nth-child(2) {
+        animation-delay: 0.12s;
+    }
+    #loading-bar.floating span:nth-child(3) {
+        animation-delay: 0.24s;
+    }
+
+    @keyframes box-wave {
+        0%,
+        100% {
+            opacity: 0.3;
+        }
+        50% {
+            opacity: 1;
+        }
+    }
+
+    /* ---- 退场：反向错开消失 ---- */
+    #loading-bar.exiting span {
+        animation: box-exit 0.2s ease forwards;
+    }
+    #loading-bar.exiting span:nth-child(1) {
+        animation-delay: 0.1s;
+    }
+    #loading-bar.exiting span:nth-child(2) {
+        animation-delay: 0.05s;
+    }
+    #loading-bar.exiting span:nth-child(3) {
+        animation-delay: 0s;
+    }
+
+    @keyframes box-exit {
+        from {
+            opacity: 1;
+        }
+        to {
+            opacity: 0;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        #loading-bar,
+        #loading-bar.loading,
+        #loading-bar.floating,
+        #loading-bar.exiting,
+        #loading-bar span {
+            animation: none !important;
+            opacity: 0 !important;
+        }
+    }
+</style>
+
+<script is:inline>
+    (function () {
+        if (document.getElementById("loading-bar")) return;
+
+        const bar = document.createElement("div");
+        bar.id = "loading-bar";
+        for (let i = 0; i < 3; i++) bar.append(document.createElement("span"));
+        document.documentElement.append(bar);
+
+        const boxes = bar.querySelectorAll("span");
+        let exitTimer = null;
+        let safetyTimer = null;
+
+        function resetBar() {
+            if (exitTimer) {
+                clearTimeout(exitTimer);
+                exitTimer = null;
+            }
+            if (safetyTimer) {
+                clearTimeout(safetyTimer);
+                safetyTimer = null;
+            }
+            bar.className = "";
+            boxes.forEach((s) => {
+                s.style.transform = "";
+                s.style.opacity = "";
+            });
+        }
+
+        function startExit() {
+            if (!bar.isConnected || !bar.classList.contains("loading")) return;
+
+            // 冻结入场结束态，避免切换 class 闪动
+            boxes.forEach((s) => {
+                s.style.transform = "scale(1) rotate(0deg)";
+                s.style.opacity = "1";
+            });
+            bar.classList.remove("loading", "floating");
+
+            void bar.offsetWidth;
+            bar.classList.add("exiting");
+
+            exitTimer = setTimeout(resetBar, 350);
+        }
+
+        function onEnterDone() {
+            if (bar.classList.contains("loading"))
+                bar.classList.add("floating");
+        }
+
+        document.addEventListener("astro:before-preparation", () => {
+            resetBar();
+
+            bar.classList.add("loading");
+
+            // 入场动画完成后切到浮动
+            const ENTER_DURATION = 500;
+            setTimeout(onEnterDone, ENTER_DURATION);
+
+            safetyTimer = setTimeout(() => {
+                if (bar.classList.contains("loading")) startExit();
+            }, 8000);
+        });
+
+        document.addEventListener("astro:after-preparation", () => {
+            startExit();
+        });
+
+        document.addEventListener("astro:page-load", resetBar);
+    })();
+</script>

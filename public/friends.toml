@@ -1,0 +1,38 @@
+# 友链数据文件
+# 页面会动态请求此文件来渲染友链列表
+# 格式：
+#
+# [唯一ID]
+#   name = "显示名称"
+#   url = "链接地址"
+#   avatar = "头像地址"
+#   description = "简短描述"
+#   # rss = "https://blog.thricecola.com/rss.xml"   # 可选
+
+[viki]
+name = "Viki 写东西的地方"
+url = "https://blog.viki.moe"
+avatar = "https://blog.viki.moe/avatar.png"
+description = "生活需要记录。"
+rss = "https://blog.viki.moe/rss"
+
+[shige]
+name = "时歌的博客"
+url = "https://www.lapis.cafe"
+avatar = "https://www.lapis.cafe/avatar.webp"
+description = "理解以真实为本，但真实本身并不会自动呈现"
+rss = "https://www.lapis.cafe/rss.xml"
+
+[mikann_OMO]
+name = "mikann_OMO"
+url = "https://www.mikann.fun"
+avatar = "https://mikann.fun/avatar.webp"
+description = "是一位超级无敌可爱美少女"
+rss = "https://mikann.fun/rss.xml"
+
+[Zellon]
+name = "Zellon的博客"
+url = "https://www.zellon.top/"
+avatar = "https://www.zellon.top/avatar.jpg"
+description = "告别过去，是为了走向未来"
+rss = "https://www.zellon.top/rss.xml"

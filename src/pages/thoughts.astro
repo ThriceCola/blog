@@ -1,0 +1,260 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseHead from "../components/BaseHead.astro";
+import Footer from "../components/Footer.astro";
+import FormattedDate from "../components/FormattedDate.astro";
+import Header from "../components/Header.astro";
+import LoadingBar from "../components/LoadingBar.astro";
+import { ClientRouter } from "astro:transitions";
+
+const thoughts = (await getCollection("thoughts")).sort(
+    (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+const renderedPosts = await Promise.all(
+    thoughts.map(async (post) => {
+        const { Content } = await render(post);
+        return { id: post.id, data: post.data, Content };
+    }),
+);
+---
+
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <BaseHead
+            title="碎碎念 — ThriceCola's Blog"
+            description="ThriceCola 的日常与碎碎念"
+        />
+        <ClientRouter />
+        <LoadingBar />
+        <style>
+            main {
+                max-width: 640px;
+                margin: 0 auto;
+            }
+
+            .thought-card {
+                border: 1px solid var(--semi-accent-color);
+                box-shadow: -6px 8px 2px 1px var(--shadow-color);
+                background-color: var(--background-color);
+                padding: 24px 28px;
+                margin-bottom: 1.75rem;
+                transition: box-shadow 0.2s;
+            }
+            .thought-card:hover {
+                box-shadow: -8px 10px 2px 1px var(--shadow-color);
+            }
+
+            .thought-date {
+                font-size: 0.82em;
+                color: var(--semi-accent-color);
+                margin: 0 0 1.2em;
+                padding-bottom: 0.85em;
+                border-bottom: 1px dashed var(--semi-accent-color);
+            }
+
+            .thought-body {
+                font-size: 0.95em;
+                line-height: 1.7;
+                color: var(--normal-text-color);
+                overflow-wrap: break-word;
+            }
+            .thought-body p {
+                margin: 0 0 0.6em;
+            }
+            .thought-body p:last-child {
+                margin-bottom: 0;
+            }
+            .thought-body img {
+                max-width: 100%;
+                height: auto;
+                margin: 0.5em 0;
+            }
+            .thought-body a {
+                color: var(--accent-color);
+            }
+            .thought-body blockquote {
+                margin: 0.5em 0;
+                padding: 0.5em 1em;
+                border-left: 3px solid var(--accent-color);
+                background: color-mix(
+                    in srgb,
+                    var(--accent-color) 8%,
+                    transparent
+                );
+                color: var(--semi-accent-color);
+            }
+            .thought-body code {
+                font-size: 0.9em;
+                padding: 0.15em 0.4em;
+                border-radius: 3px;
+                background: color-mix(
+                    in srgb,
+                    var(--semi-accent-color) 12%,
+                    transparent
+                );
+            }
+            .thought-body pre {
+                padding: 1em;
+                border-radius: 6px;
+                overflow-x: auto;
+                border: 1px solid var(--semi-accent-color);
+                background: color-mix(
+                    in srgb,
+                    var(--semi-accent-color) 6%,
+                    transparent
+                );
+            }
+            .thought-body pre code {
+                background: none;
+                padding: 0;
+            }
+            .thought-body ul,
+            .thought-body ol {
+                padding-left: 1.5em;
+                margin: 0 0 0.8em;
+            }
+            .thought-body li {
+                margin-bottom: 0.25em;
+            }
+            .thought-body li:last-child {
+                margin-bottom: 0;
+            }
+            .thought-body hr {
+                border: none;
+                border-top: 1px dashed var(--semi-accent-color);
+                margin: 0.8em 0;
+            }
+
+            @media (max-width: 480px) {
+                .thought-card {
+                    padding: 16px 14px;
+                    margin-bottom: 1.25rem;
+                }
+                .thought-body {
+                    font-size: 0.9em;
+                }
+                .thought-date {
+                    margin-bottom: 0.75em;
+                    padding-bottom: 0.5em;
+                }
+            }
+
+            /* === Infinite scroll === */
+            .hidden-post {
+                display: none;
+            }
+
+            #sentinel {
+                height: 1px;
+                width: 100%;
+            }
+
+            .loading-indicator {
+                text-align: center;
+                padding: 1.5em 0;
+                color: var(--semi-accent-color);
+                font-size: 0.9em;
+            }
+            .loading-indicator.hidden {
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <Header />
+        <main>
+            <div class="page-header">
+                <h1>碎碎念</h1>
+                <p>日常、想法、碎片记录</p>
+            </div>
+
+            <section id="thoughts-feed">
+                {
+                    renderedPosts.map((post, i) => (
+                        <article
+                            class:list={[
+                                "thought-card",
+                                i >= 5 && "hidden-post",
+                            ]}
+                            data-index={i}
+                        >
+                            <p class="thought-date">
+                                <FormattedDate date={post.data.pubDate} />
+                            </p>
+                            <div class="thought-body">
+                                <post.Content />
+                            </div>
+                        </article>
+                    ))
+                }
+            </section>
+
+            <div id="sentinel"></div>
+
+            <p id="loading-text" class="loading-indicator hidden">加载中...</p>
+
+            {
+                renderedPosts.length > 5 && (
+                    <p id="all-loaded" class="loading-indicator hidden">
+                        — 已经到底啦 —
+                    </p>
+                )
+            }
+        </main>
+        <Footer />
+
+        <script>
+            const BATCH = 5;
+            const feed = document.getElementById("thoughts-feed");
+            const sentinel = document.getElementById("sentinel");
+            const loadingText = document.getElementById("loading-text");
+            const allLoaded = document.getElementById("all-loaded");
+
+            if (feed && sentinel && loadingText && allLoaded) {
+                const cards = /** @type {NodeListOf<HTMLElement>} */ (
+                    feed.querySelectorAll(".thought-card.hidden-post")
+                );
+                let visibleCount = cards.length;
+                let isLoading = false;
+
+                const observer = new IntersectionObserver(
+                    async (entries) => {
+                        if (!entries[0].isIntersecting || isLoading) return;
+                        if (visibleCount <= 0) return;
+
+                        isLoading = true;
+                        loadingText.classList.remove("hidden");
+
+                        // Simulate brief loading delay for feel
+                        await new Promise((r) => setTimeout(r, 300));
+
+                        const toShow = cards.length - visibleCount;
+                        const end = Math.min(toShow + BATCH, cards.length);
+                        for (let i = toShow; i < end; i++) {
+                            cards[i].classList.remove("hidden-post");
+                        }
+                        visibleCount = cards.length - end;
+
+                        loadingText.classList.add("hidden");
+
+                        if (visibleCount <= 0) {
+                            observer.unobserve(sentinel);
+                            allLoaded.classList.remove("hidden");
+                        }
+
+                        isLoading = false;
+                    },
+                    { rootMargin: "200px" },
+                );
+
+                if (cards.length > 0) {
+                    observer.observe(sentinel);
+                } else {
+                    allLoaded.classList.remove("hidden");
+                }
+            }
+        </script>
+    </body>
+</html>
