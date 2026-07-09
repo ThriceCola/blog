@@ -213,17 +213,18 @@ img {
     background: var(--shadow-color);
 }
 
-/* Fix astro-lqip: put LQIP ::after overlay ON TOP of the image
-   so it masks progressive JPEG loading artifacts.
-   When the image loads, the inline onload handler sets
-   --opacity: 0, fading the LQIP out over 1s to reveal
-   the sharp image underneath. */
-[data-astro-lqip]::after {
-    z-index: 2;
+/* astro-lqip: hide <img> until fully loaded, so the LQIP ::after
+   placeholder shows through during slow-network progressive decode.
+   The inline onload handler fades the LQIP out (opacity 1→0, 1s),
+   while .loaded fades the sharp image in (opacity 0→1, 0.4s),
+   creating a smooth crossfade. */
+[data-astro-lqip] img {
+    opacity: 0;
+    transition: opacity 0.4s ease-out;
 }
 
-[data-astro-lqip] img {
-    z-index: 1;
+[data-astro-lqip] img.loaded {
+    opacity: 1;
 }
 
 table {

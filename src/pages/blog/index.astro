@@ -154,6 +154,25 @@ const posts = (await getCollection("blog")).sort(
                 </ul>
             </section>
         </main>
-        <Footer />
-    </body>
-</html>
+                <Footer />
+                <script>
+                    // astro-lqip list card images: hidden until loaded,
+                    // so the LQIP placeholder is visible during slow-network loading.
+                    function init() {
+                        document.querySelectorAll('[data-astro-lqip] img').forEach(img => {
+                            if (img.complete) {
+                                img.classList.add('loaded');
+                            } else {
+                                img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+                                img.addEventListener('error', () => img.classList.add('loaded'), { once: true });
+                            }
+                        });
+                    }
+                    init();
+                    if (!window.__blogIndexImgInit) {
+                        window.__blogIndexImgInit = true;
+                        document.addEventListener('astro:page-load', init);
+                    }
+                </script>
+            </body>
+        </html>

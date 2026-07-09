@@ -387,23 +387,34 @@ const { Content: ThoughtContent } = await render(latestThought);
         </main>
         <Footer />
         <script>
-            // Progressive image blur transition for markdown content images.
-            // Card image is handled by astro-lqip (LQIP overlay covers loading).
-            function init() {
-                document.querySelectorAll('.thought-content img').forEach(img => {
-                    if (img.complete) {
-                        img.classList.add('loaded');
-                    } else {
-                        img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
-                        img.addEventListener('error', () => img.classList.add('loaded'), { once: true });
+                    // Progressive image blur transition for markdown content images.
+                    // astro-lqip card images are hidden until loaded (opacity: 0 → 1),
+                    // so the LQIP placeholder is visible during slow-network loading.
+                    function init() {
+                        // astro-lqip card images (hidden until loaded)
+                        document.querySelectorAll('[data-astro-lqip] img').forEach(img => {
+                            if (img.complete) {
+                                img.classList.add('loaded');
+                            } else {
+                                img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+                                img.addEventListener('error', () => img.classList.add('loaded'), { once: true });
+                            }
+                        });
+                        // markdown content images (blur → clear transition)
+                        document.querySelectorAll('.thought-content img').forEach(img => {
+                            if (img.complete) {
+                                img.classList.add('loaded');
+                            } else {
+                                img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+                                img.addEventListener('error', () => img.classList.add('loaded'), { once: true });
+                            }
+                        });
                     }
-                });
-            }
-            init();
-            if (!window.__indexImgInit) {
-                window.__indexImgInit = true;
-                document.addEventListener('astro:page-load', init);
-            }
-        </script>
+                    init();
+                    if (!window.__indexImgInit) {
+                        window.__indexImgInit = true;
+                        document.addEventListener('astro:page-load', init);
+                    }
+                </script>
     </body>
 </html>

@@ -175,26 +175,28 @@ const { title, description, pubDate, updatedDate, heroImage, heroImagePosition }
         </main>
         <Footer />
         <script>
-            // Progressive image blur transition for markdown content images.
-            // hero image is handled by astro-lqip (LQIP overlay covers loading).
-            function initProgressiveImages(selector) {
-                document.querySelectorAll(selector).forEach(img => {
-                    if (img.complete) {
-                        img.classList.add('loaded');
-                    } else {
-                        img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
-                        img.addEventListener('error', () => img.classList.add('loaded'), { once: true });
+                    // Progressive image blur transition for markdown content images.
+                    // astro-lqip images are hidden until loaded (opacity: 0 → 1),
+                    // so the LQIP placeholder is visible during slow-network loading.
+                    function initProgressiveImages(selector) {
+                        document.querySelectorAll(selector).forEach(img => {
+                            if (img.complete) {
+                                img.classList.add('loaded');
+                            } else {
+                                img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+                                img.addEventListener('error', () => img.classList.add('loaded'), { once: true });
+                            }
+                        });
                     }
-                });
-            }
-            function init() {
-                initProgressiveImages('.prose img');
-            }
-            init();
-            if (!window.__blogPostImgInit) {
-                window.__blogPostImgInit = true;
-                document.addEventListener('astro:page-load', init);
-            }
-        </script>
+                    function init() {
+                        initProgressiveImages('[data-astro-lqip] img');
+                        initProgressiveImages('.prose img');
+                    }
+                    init();
+                    if (!window.__blogPostImgInit) {
+                        window.__blogPostImgInit = true;
+                        document.addEventListener('astro:page-load', init);
+                    }
+                </script>
     </body>
 </html>
