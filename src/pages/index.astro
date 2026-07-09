@@ -382,9 +382,17 @@ const { Content: ThoughtContent } = await render(latestThought);
                     // so the LQIP placeholder is visible during slow-network loading.
                     function init() {
                         // astro-lqip card images (hidden until loaded)
-                        document.querySelectorAll('[data-astro-lqip] img').forEach(img => {
+                        document.querySelectorAll('[data-astro-lqip]').forEach(wrapper => {
+                            const img = wrapper.querySelector('img');
+                            if (!img || img.dataset.lqipInit) return;
+                            img.dataset.lqipInit = '1';
                             if (img.complete) {
+                                // Cached image: hide blur ::after and skip opacity transition
+                                wrapper.classList.add('lqip-cached');
+                                img.style.transition = 'none';
                                 img.classList.add('loaded');
+                                img.offsetHeight;
+                                img.style.transition = '';
                             } else {
                                 img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
                                 img.addEventListener('error', () => img.classList.add('loaded'), { once: true });
@@ -392,8 +400,13 @@ const { Content: ThoughtContent } = await render(latestThought);
                         });
                         // markdown content images (blur → clear transition)
                         document.querySelectorAll('.thought-content img').forEach(img => {
+                            if (img.dataset.progressive) return;
+                            img.dataset.progressive = '1';
                             if (img.complete) {
+                                img.style.transition = 'none';
                                 img.classList.add('loaded');
+                                img.offsetHeight;
+                                img.style.transition = '';
                             } else {
                                 img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
                                 img.addEventListener('error', () => img.classList.add('loaded'), { once: true });

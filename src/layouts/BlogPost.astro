@@ -170,16 +170,46 @@ const { title, description, pubDate, updatedDate, heroImage, heroImagePosition }
                     // so the LQIP placeholder is visible during slow-network loading.
                     function initProgressiveImages(selector) {
                         document.querySelectorAll(selector).forEach(img => {
+                            if (img.dataset.progressive) return;
+                            img.dataset.progressive = '1';
                             if (img.complete) {
+                                // Cached image: skip the opacity transition entirely
+                                img.style.transition = 'none';
                                 img.classList.add('loaded');
+                                // Force reflow so the transition-none takes effect,
+                                // then restore the transition for any future state changes
+                                img.offsetHeight;
+                                img.style.transition = '';
                             } else {
                                 img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
                                 img.addEventListener('error', () => img.classList.add('loaded'), { once: true });
                             }
                         });
                     }
+                    function initLqipImages() {
+                        document.querySelectorAll('[data-astro-lqip]').forEach(wrapper => {
+                            const img = wrapper.querySelector('img');
+                            if (!img || img.dataset.lqipInit) return;
+                            img.dataset.lqipInit = '1';
+                            if (img.complete) {
+                                // Cached image: hide blur ::after and skip img opacity transition
+                                wrapper.classList.add('lqip-cached');
+                                img.style.transition = 'none';
+                                img.classList.add('loaded');
+                                img.offsetHeight;
+                                img.style.transition = '';
+                            } else {
+                                img.addEventListener('load', () => {
+                                    img.classList.add('loaded');
+                                }, { once: true });
+                                img.addEventListener('error', () => {
+                                    img.classList.add('loaded');
+                                }, { once: true });
+                            }
+                        });
+                    }
                     function init() {
-                        initProgressiveImages('[data-astro-lqip] img');
+                        initLqipImages();
                         initProgressiveImages('.prose img');
                     }
                     init();

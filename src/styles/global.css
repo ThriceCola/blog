@@ -241,6 +241,14 @@ img {
     opacity: 1;
 }
 
+/* When the image is already cached (img.complete), hide the LQIP blur
+   ::after immediately without the 1s fade-out transition. This prevents
+   the blur animation from replaying on SPA navigations or warm-cache loads. */
+[data-astro-lqip].lqip-cached::after {
+    opacity: 0 !important;
+    transition: none !important;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;

@@ -220,7 +220,11 @@ const renderedPosts = await Promise.all(
                     if (img.dataset.progressive) return;
                     img.dataset.progressive = '1';
                     if (img.complete) {
+                        // Cached image: skip the opacity transition entirely
+                        img.style.transition = 'none';
                         img.classList.add('loaded');
+                        img.offsetHeight;
+                        img.style.transition = '';
                     } else {
                         img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
                         img.addEventListener('error', () => img.classList.add('loaded'), { once: true });
