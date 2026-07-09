@@ -216,10 +216,20 @@ img {
 /* astro-lqip: put the LQIP ::after ON TOP (z-index: 2) so it renders
    above the <img> (which has opacity:0 during loading). Without this,
    some browsers skip rendering the ::after behind a higher-z-index img.
+   filter: blur smooths the pixelated LQIP into a soft preview.
+   The semi-transparent gradient overlay tints the LQIP to reduce
+   the "dirty" low-resolution color palette.
    When the image loads, the inline onload handler fades the LQIP out
    (opacity 1→0, 1s) while .loaded fades the sharp image in (0→1, 0.4s). */
 [data-astro-lqip]::after {
     z-index: 2;
+    filter: blur(8px);
+    background:
+        linear-gradient(rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.35)),
+        var(--lqip-background);
+    background-size: cover, cover;
+    background-position: 50%, 50%;
+    background-repeat: no-repeat, no-repeat;
 }
 
 [data-astro-lqip] img {
