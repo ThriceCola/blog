@@ -40,25 +40,6 @@ const { title, description, pubDate, updatedDate, heroImage, heroImagePosition }
                 height: auto;
                 aspect-ratio: 720 / 360;
                 object-fit: cover;
-                filter: blur(15px);
-                opacity: 0.75;
-                transition: filter 0.5s ease-out, opacity 0.5s ease-out;
-                will-change: filter, opacity;
-                -webkit-mask-image:
-                    linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%),
-                    linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%);
-                -webkit-mask-composite: source-in;
-                mask-image:
-                    linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%),
-                    linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%);
-                mask-composite: intersect;
-            }
-            .hero-image img.loaded {
-                filter: blur(0);
-                opacity: 1;
-                will-change: auto;
-                -webkit-mask-image: none;
-                mask-image: none;
             }
             .prose {
                 width: 100%;
@@ -198,7 +179,6 @@ const { title, description, pubDate, updatedDate, heroImage, heroImagePosition }
                 });
             }
             function init() {
-                initProgressiveImages('.hero-image img');
                 initProgressiveImages('.prose img');
             }
             init();

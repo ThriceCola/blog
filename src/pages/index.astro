@@ -161,25 +161,6 @@ const { Content: ThoughtContent } = await render(latestThought);
                 height: 140px;
                 object-fit: cover;
                 border: 1px solid var(--semi-accent-color);
-                filter: blur(15px);
-                opacity: 0.75;
-                transition: filter 0.5s ease-out, opacity 0.5s ease-out;
-                will-change: filter, opacity;
-                -webkit-mask-image:
-                    linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%),
-                    linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%);
-                -webkit-mask-composite: source-in;
-                mask-image:
-                    linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%),
-                    linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%);
-                mask-composite: intersect;
-            }
-            .recent-card-image.loaded {
-                filter: blur(0);
-                opacity: 1;
-                will-change: auto;
-                -webkit-mask-image: none;
-                mask-image: none;
             }
             .recent-card-links {
                 grid-column: 1;
@@ -412,7 +393,7 @@ const { Content: ThoughtContent } = await render(latestThought);
                 img.classList.add('loaded');
             }
             function init() {
-                document.querySelectorAll('img.recent-card-image, .thought-content img').forEach(img => {
+                document.querySelectorAll('.thought-content img').forEach(img => {
                     if (img.tagName !== 'IMG') return;
                     if (img.complete) {
                         img.classList.add('loaded');
