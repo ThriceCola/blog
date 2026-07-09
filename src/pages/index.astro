@@ -383,19 +383,27 @@ const { Content: ThoughtContent } = await render(latestThought);
         <Footer />
         <script>
             // Progressive image blur transition.
-            // Uses addEventListener (not onload=) to preserve astro-lqip's inline handler.
+            // Initializes on first load AND after each astro:transitions SPA navigation.
             function markLoaded(img) {
                 img.classList.add('loaded');
             }
-            document.querySelectorAll('img.recent-card-image, .thought-content img').forEach(img => {
-                if (img.tagName !== 'IMG') return;
-                if (img.complete) {
-                    img.classList.add('loaded');
-                } else {
-                    img.addEventListener('load', () => markLoaded(img), { once: true });
-                    img.addEventListener('error', () => markLoaded(img), { once: true });
-                }
-            });
+            function init() {
+                document.querySelectorAll('img.recent-card-image, .thought-content img').forEach(img => {
+                    if (img.tagName !== 'IMG') return;
+                    if (img.complete) {
+                        img.classList.add('loaded');
+                    } else {
+                        img.addEventListener('load', () => markLoaded(img), { once: true });
+                        img.addEventListener('error', () => markLoaded(img), { once: true });
+                    }
+                });
+            }
+            init();
+            // Re-run after each SPA navigation (astro:transitions)
+            if (!window.__indexImgInit) {
+                window.__indexImgInit = true;
+                document.addEventListener('astro:page-load', init);
+            }
         </script>
     </body>
 </html>

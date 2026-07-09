@@ -183,7 +183,7 @@ const { title, description, pubDate, updatedDate, heroImage, heroImagePosition }
         <Footer />
         <script>
             // Progressive image blur transition.
-            // Uses addEventListener (not onload=) to preserve astro-lqip's inline handler.
+            // Initializes on first load AND after each astro:transitions SPA navigation.
             function markLoaded(img) {
                 img.classList.add('loaded');
             }
@@ -197,8 +197,16 @@ const { title, description, pubDate, updatedDate, heroImage, heroImagePosition }
                     }
                 });
             }
-            initProgressiveImages('.hero-image img');
-            initProgressiveImages('.prose img');
+            function init() {
+                initProgressiveImages('.hero-image img');
+                initProgressiveImages('.prose img');
+            }
+            init();
+            // Re-run after each SPA navigation (astro:transitions)
+            if (!window.__blogPostImgInit) {
+                window.__blogPostImgInit = true;
+                document.addEventListener('astro:page-load', init);
+            }
         </script>
     </body>
 </html>

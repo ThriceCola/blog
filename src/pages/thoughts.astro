@@ -225,6 +225,7 @@ const renderedPosts = await Promise.all(
 
         <script>
             // Progressive image blur transition for markdown images.
+            // Initializes on first load AND after each astro:transitions SPA navigation.
             function initThoughtImages(root) {
                 (root || document).querySelectorAll('.thought-body img').forEach(img => {
                     if (img.dataset.progressive) return;
@@ -237,7 +238,15 @@ const renderedPosts = await Promise.all(
                     }
                 });
             }
-            initThoughtImages();
+            function init() {
+                initThoughtImages();
+            }
+            init();
+            // Re-run after each SPA navigation (astro:transitions)
+            if (!window.__thoughtsImgInit) {
+                window.__thoughtsImgInit = true;
+                document.addEventListener('astro:page-load', init);
+            }
         </script>
 
         <script>
