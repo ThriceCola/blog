@@ -133,15 +133,22 @@ const posts = (await getCollection("blog")).sort(
                                             />
                                         </p>
                                     </div>
-                                    {post.data.heroImage && (
-                                        <Image
-                                            class="post-image"
-                                            width={240}
-                                            height={140}
-                                            src={post.data.heroImage}
-                                            alt=""
-                                        />
-                                    )}
+                                    {(() => {
+                                                                const cardImgSrc = post.data.cardImage ?? post.data.heroImage;
+                                                                const cardImgPos = post.data.cardImage
+                                                                    ? post.data.cardImagePosition
+                                                                    : post.data.heroImagePosition;
+                                                                return cardImgSrc && (
+                                                                    <Image
+                                                                        class="post-image"
+                                                                        width={240}
+                                                                        height={140}
+                                                                        src={cardImgSrc}
+                                                                        alt=""
+                                                                        style={{ objectPosition: cardImgPos }}
+                                                                    />
+                                                                );
+                                                            })()}
                                 </a>
                             </li>
                         ))

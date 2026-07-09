@@ -1,4 +1,5 @@
 ---
+import { Image } from "astro:assets";
 import { getCollection, render } from "astro:content";
 import BaseHead from "../components/BaseHead.astro";
 import Footer from "../components/Footer.astro";
@@ -128,19 +129,37 @@ const { Content: ThoughtContent } = await render(latestThought);
                 color: var(--accent-color);
             }
             .recent-card-desc {
-                margin: 0 0 1em;
+                margin: 0.35em 0 0.5em;
                 color: var(--semi-accent-color);
                 font-size: 0.95em;
-                line-height: 1.6;
+                line-height: 1.5;
+            }
+            .recent-card-content {
+                display: flex;
+                gap: 1.5rem;
+                margin-top: 1em;
+            }
+            .recent-card-body {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                min-width: 0;
+                flex: 1;
+            }
+            .recent-card-image {
+                flex-shrink: 0;
+                width: 240px;
+                height: 140px;
+                object-fit: cover;
+                border: 1px solid var(--semi-accent-color);
+                border-radius: 4px;
             }
             .recent-card-links {
                 display: flex;
                 gap: 1.5em;
-                margin-top: 0.5em;
+                margin-top: 0.25em;
             }
             .recent-card-more {
-                display: inline-block;
-                margin-top: 1em;
                 font-size: 0.9em;
                 color: var(--accent-color);
                 text-decoration: none;
@@ -168,6 +187,16 @@ const { Content: ThoughtContent } = await render(latestThought);
                     flex-direction: column;
                     align-items: flex-start;
                     gap: 0.3em;
+                }
+                .recent-card-content {
+                    flex-direction: column;
+                    gap: 0.75rem;
+                }
+                .recent-card-image {
+                    width: 100%;
+                    height: auto;
+                    aspect-ratio: 16 / 9;
+                    order: -1;
                 }
             }
 
@@ -263,29 +292,51 @@ const { Content: ThoughtContent } = await render(latestThought);
                         <span class="recent-card-type">最新文章</span>
                         <FormattedDate date={latestBlog.data.pubDate} />
                     </div>
-                    <a
-                        href={`/blog/${latestBlog.id}/`}
-                        class="recent-card-title-link"
-                    >
-                        <h3 class="recent-card-title">
-                            {latestBlog.data.title}
-                        </h3>
-                    </a>
-                    {
-                        latestBlog.data.description && (
-                            <p class="recent-card-desc line-clamp-3">
-                                {latestBlog.data.description}
-                            </p>
-                        )
-                    }
-                    <div class="recent-card-links">
-                        <a
-                            href={`/blog/${latestBlog.id}/`}
-                            class="recent-card-more">阅读全文 →</a
-                        >
-                        <a href="/blog" class="recent-card-more"
-                            >查看更多文章 →</a
-                        >
+                    <div class="recent-card-content">
+                        <div class="recent-card-body">
+                            <a
+                                href={`/blog/${latestBlog.id}/`}
+                                class="recent-card-title-link"
+                            >
+                                <h3 class="recent-card-title">
+                                    {latestBlog.data.title}
+                                </h3>
+                            </a>
+                            {
+                                latestBlog.data.description && (
+                                    <p class="recent-card-desc line-clamp-3">
+                                        {latestBlog.data.description}
+                                    </p>
+                                )
+                            }
+                            <div class="recent-card-links">
+                                <a
+                                    href={`/blog/${latestBlog.id}/`}
+                                    class="recent-card-more">阅读全文 →</a
+                                >
+                                <a href="/blog" class="recent-card-more"
+                                    >查看更多文章 →</a
+                                >
+                            </div>
+                        </div>
+                        {
+                            (() => {
+                                const cardImgSrc = latestBlog.data.cardImage ?? latestBlog.data.heroImage;
+                                const cardImgPos = latestBlog.data.cardImage
+                                    ? latestBlog.data.cardImagePosition
+                                    : latestBlog.data.heroImagePosition;
+                                return cardImgSrc && (
+                                    <Image
+                                        class="recent-card-image"
+                                        width={240}
+                                        height={140}
+                                        src={cardImgSrc}
+                                        alt=""
+                                        style={{ objectPosition: cardImgPos }}
+                                    />
+                                );
+                            })()
+                        }
                     </div>
                 </article>
             </div>
