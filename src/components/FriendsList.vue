@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { parse } from 'smol-toml';
 
 interface Friend {
@@ -19,8 +19,7 @@ const shuffled = ref(false);
 // Redirect modal
 const showRedirectModal = ref(false);
 const redirectFriend = ref<Friend | null>(null);
-const redirectCountdown = ref(6);
-let redirectTimer: ReturnType<typeof setInterval> | null = null;
+
 
 const loadingTexts = ['加载中...', '让我找找看...', '马上就好...'];
 const loadingText = ref(loadingTexts[0]);
@@ -72,13 +71,8 @@ onMounted(async () => {
 });
 
 function cancelRedirect() {
-    if (redirectTimer) {
-        clearInterval(redirectTimer);
-        redirectTimer = null;
-    }
     showRedirectModal.value = false;
     redirectFriend.value = null;
-    redirectCountdown.value = 3;
 }
 
 function executeRedirect(friend: Friend) {
@@ -92,22 +86,10 @@ function randomFriend() {
     const friend = friends.value[idx];
 
     redirectFriend.value = friend;
-    redirectCountdown.value = 6;
     showRedirectModal.value = true;
-
-    redirectTimer = setInterval(() => {
-        redirectCountdown.value--;
-        if (redirectCountdown.value <= 0) {
-            executeRedirect(friend);
-        }
-    }, 1000);
 }
 
-onUnmounted(() => {
-    if (redirectTimer) {
-        clearInterval(redirectTimer);
-    }
-});
+
 
 function shuffle() {
     const arr = [...friends.value];
@@ -196,15 +178,7 @@ function onImgLoad(e: Event) {
                         <span class="redirect-name">{{ redirectFriend.name }}</span>
                         <span v-if="redirectFriend.description" class="redirect-desc line-clamp-2">{{ redirectFriend.description }}</span>
                     </div>
-                    <div class="countdown-ring">
-                        <svg viewBox="0 0 48 48">
-                            <circle class="countdown-ring-bg" cx="24" cy="24" r="20" />
-                            <circle class="countdown-ring-fg" cx="24" cy="24" r="20"
-                                :style="{ strokeDashoffset: (1 - redirectCountdown / 6) * 125.6 + 'px' }" />
-                        </svg>
-                        <span class="countdown-ring-text">{{ redirectCountdown }}</span>
-                    </div>
-                    <p class="redirect-hint">{{ redirectCountdown }}秒后自动转跳</p>
+
                     <div class="redirect-actions">
                         <button class="btn btn--cancel" @click="cancelRedirect">取消</button>
                         <button class="btn btn--go" @click="executeRedirect(redirectFriend)">立即前往</button>
@@ -388,12 +362,6 @@ function onImgLoad(e: Event) {
 
 .redirect-desc {
     font-size: 0.8em;
-    color: var(--semi-accent-color);
-}
-
-.redirect-hint {
-    margin: 0;
-    font-size: 0.85em;
     color: var(--semi-accent-color);
 }
 
