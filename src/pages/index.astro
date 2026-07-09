@@ -56,7 +56,7 @@ const { Content: ThoughtContent } = await render(latestThought);
             .link-card h2 {
                 font-size: 1.2em;
                 margin: 0;
-                color: var(--accent-color);
+                color: var(--normal-text-color);
             }
             .link-card p {
                 margin: 0.5em 0 0;
@@ -93,7 +93,7 @@ const { Content: ThoughtContent } = await render(latestThought);
             }
             .recent-card-type {
                 font-size: 0.9em;
-                color: var(--accent-color);
+                color: var(--normal-text-color);
                 font-weight: 600;
             }
             .recent-card-header time {
@@ -123,10 +123,6 @@ const { Content: ThoughtContent } = await render(latestThought);
                 margin: 0 0 0.5em;
                 font-size: 1.25em;
                 color: var(--normal-text-color);
-                transition: color 0.2s;
-            }
-            .recent-card-title-link:hover .recent-card-title {
-                color: var(--accent-color);
             }
             .recent-card-desc {
                 margin: 0.35em 0 0.5em;

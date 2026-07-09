@@ -13,15 +13,17 @@
     --semi-accent-color: #8aafa9;
     --highlight-color: #9bdacf;
     --shadow-color: #8aafa960;
+    --quote-bg: #8aafa920;
 }
 
 html[data-theme="dark"] {
-    --background-color: #121917;
-    --normal-text-color: #d6e2dd;
-    --accent-color: #3fbf9a;
+    --background-color: #0c100f;
+    --normal-text-color: #cad6d1;
+    --accent-color: #3ab18d;
     --semi-accent-color: #2f6f63;
     --highlight-color: #5fd3ba;
     --shadow-color: #3fbf9a33;
+    --quote-bg: #3fbf9a20;
 }
 
 /* Shiki dual-theme: apply dark color scheme to code blocks */
@@ -188,12 +190,11 @@ pre>code {
 }
 
 blockquote {
-    border-left: 4px solid var(--accent-color);
-    padding: 0.75em 1em 0.75em 20px;
-    margin: 1em 0;
-    color: var(--semi-accent-color);
-    background: color-mix(in srgb, var(--accent-color) 6%, transparent);
-    border-radius: 0 4px 4px 0;
+    border-left: 3px solid var(--shadow-color);
+    padding: 0.5em 1em 0.5em 20px;
+    margin: 1.5em 0;
+    color: var(--normal-text-color);
+    background: var(--quote-bg);
 }
 
 blockquote p:last-child {
@@ -398,8 +399,8 @@ main {
     }
 
     blockquote {
-        padding: 0.6em 0.75em 0.6em 16px;
-        margin: 0.75em 0;
+        padding: 0.5em 0.75em 0.5em 16px;
+        margin: 1em 0;
     }
 
     ul,
