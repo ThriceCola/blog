@@ -181,7 +181,7 @@ function onImgLoad(e: Event) {
 
                     <div class="redirect-actions">
                         <button class="btn btn--cancel" @click="cancelRedirect">取消</button>
-                        <button class="btn btn--go" @click="executeRedirect(redirectFriend)">立即前往</button>
+                        <button class="btn btn--go" @click="executeRedirect(redirectFriend)">前往</button>
                     </div>
                 </div>
             </div>
