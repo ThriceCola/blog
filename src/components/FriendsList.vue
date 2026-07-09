@@ -162,11 +162,11 @@ function shuffle() {
                     <span v-else class="avatar avatar-placeholder">{{ friend.name.charAt(0) }}</span>
                     <div class="card-body">
                         <span class="name">{{ friend.name }}</span>
-                        <span v-if="friend.description" class="desc">{{ friend.description }}</span>
+                        <span v-if="friend.description" class="desc line-clamp-2">{{ friend.description }}</span>
                     </div>
                 </a>
-                <a v-if="friend.rss" :href="friend.rss" target="_blank" rel="noopener noreferrer" class="rss-badge"
-                    data-tip="支持 RSS">
+                <a v-if="friend.rss" :href="friend.rss" target="_blank" rel="noopener noreferrer" class="rss-badge tooltip"
+                                    data-tip="支持 RSS">
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M4 11a9 9 0 0 1 9 9" />
@@ -181,8 +181,8 @@ function shuffle() {
     <!-- Redirect confirmation modal -->
     <Teleport to="body">
         <Transition name="modal">
-            <div v-if="showRedirectModal && redirectFriend" class="redirect-overlay" @click.self="cancelRedirect">
-                <div class="redirect-card card">
+            <div v-if="showRedirectModal && redirectFriend" class="modal-overlay" @click.self="cancelRedirect">
+                <div class="modal-card card">
                     <img v-if="redirectFriend.avatar" :src="redirectFriend.avatar" :alt="redirectFriend.name"
                         class="redirect-avatar" />
                     <span v-else class="redirect-avatar redirect-avatar-placeholder">{{
@@ -190,15 +190,15 @@ function shuffle() {
                     <div class="redirect-info">
                         <span class="redirect-label">即将前往</span>
                         <span class="redirect-name">{{ redirectFriend.name }}</span>
-                        <span v-if="redirectFriend.description" class="redirect-desc">{{ redirectFriend.description }}</span>
+                        <span v-if="redirectFriend.description" class="redirect-desc line-clamp-2">{{ redirectFriend.description }}</span>
                     </div>
-                    <div class="redirect-countdown-ring">
+                    <div class="countdown-ring">
                         <svg viewBox="0 0 48 48">
-                            <circle class="countdown-bg-ring" cx="24" cy="24" r="20" />
-                            <circle class="countdown-fg-ring" cx="24" cy="24" r="20"
+                            <circle class="countdown-ring-bg" cx="24" cy="24" r="20" />
+                            <circle class="countdown-ring-fg" cx="24" cy="24" r="20"
                                 :style="{ strokeDashoffset: (1 - redirectCountdown / 6) * 125.6 + 'px' }" />
                         </svg>
-                        <span class="countdown-text">{{ redirectCountdown }}</span>
+                        <span class="countdown-ring-text">{{ redirectCountdown }}</span>
                     </div>
                     <p class="redirect-hint">{{ redirectCountdown }}秒后自动转跳</p>
                     <div class="redirect-actions">
@@ -298,11 +298,6 @@ function shuffle() {
     font-size: 0.8em;
     color: var(--semi-accent-color);
     line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    line-clamp: 2;
-    overflow: hidden;
 }
 
 .rss-badge {
@@ -325,27 +320,6 @@ function shuffle() {
     color: var(--accent-color);
 }
 
-.rss-badge::after {
-    content: attr(data-tip);
-    position: absolute;
-    top: -6px;
-    left: 50%;
-    transform: translate(-50%, -100%);
-    padding: 2px 6px;
-    border: 1px solid var(--semi-accent-color);
-    font-size: 0.75rem;
-    white-space: nowrap;
-    color: var(--semi-accent-color);
-    background: var(--background-color);
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.12s;
-}
-
-.rss-badge:hover::after {
-    opacity: 1;
-}
-
 .friends-toolbar {
     display: flex;
     gap: 8px;
@@ -356,41 +330,7 @@ function shuffle() {
     transition: transform 0.35s ease;
 }
 
-/* ===== Redirect modal ===== */
-.redirect-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1em;
-    background: color-mix(in srgb, var(--background-color) 80%, transparent);
-}
-
-.redirect-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-    padding: 2em 2.5em;
-    max-width: 380px;
-    width: 100%;
-    text-align: center;
-    animation: redirect-enter 0.3s ease;
-}
-
-@keyframes redirect-enter {
-    from {
-        opacity: 0;
-        transform: scale(0.9) translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-    }
-}
-
+/* ===== Redirect modal (component-specific) ===== */
 .redirect-avatar {
     width: 64px;
     height: 64px;
@@ -429,49 +369,6 @@ function shuffle() {
 .redirect-desc {
     font-size: 0.8em;
     color: var(--semi-accent-color);
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    line-clamp: 2;
-    overflow: hidden;
-}
-
-.redirect-countdown-ring {
-    position: relative;
-    width: 56px;
-    height: 56px;
-}
-
-.redirect-countdown-ring svg {
-    width: 100%;
-    height: 100%;
-    transform: rotate(-90deg);
-}
-
-.countdown-bg-ring {
-    fill: none;
-    stroke: color-mix(in srgb, var(--semi-accent-color) 20%, transparent);
-    stroke-width: 4;
-}
-
-.countdown-fg-ring {
-    fill: none;
-    stroke: var(--accent-color);
-    stroke-width: 4;
-    stroke-linecap: round;
-    stroke-dasharray: 125.6;
-    transition: stroke-dashoffset 1s linear;
-}
-
-.countdown-text {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.3em;
-    font-weight: 700;
-    color: var(--accent-color);
 }
 
 .redirect-hint {
@@ -508,20 +405,6 @@ function shuffle() {
 
 .redirect-actions .btn:active {
     box-shadow: -2px 3px 1px 1px var(--shadow-color);
-}
-
-/* Modal transition */
-.modal-enter-active {
-    transition: opacity 0.25s ease;
-}
-
-.modal-leave-active {
-    transition: opacity 0.2s ease;
-}
-
-.modal-enter-from,
-.modal-leave-to {
-    opacity: 0;
 }
 
 @media (max-width: 560px) {
