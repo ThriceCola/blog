@@ -1,5 +1,5 @@
 ---
-import { Image } from "astro:assets";
+import { Image } from "astro-lqip/components";
 import { getCollection, render } from "astro:content";
 import BaseHead from "../components/BaseHead.astro";
 import Footer from "../components/Footer.astro";
@@ -148,6 +148,23 @@ const { Content: ThoughtContent } = await render(latestThought);
                 height: 140px;
                 object-fit: cover;
                 border: 1px solid var(--semi-accent-color);
+                filter: blur(15px);
+                opacity: 0.75;
+                transition: filter 0.5s ease-out, opacity 0.5s ease-out;
+                -webkit-mask-image:
+                    linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%),
+                    linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%);
+                -webkit-mask-composite: source-in;
+                mask-image:
+                    linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%),
+                    linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%);
+                mask-composite: intersect;
+            }
+            .recent-card-image.loaded {
+                filter: blur(0);
+                opacity: 1;
+                -webkit-mask-image: none;
+                mask-image: none;
             }
             .recent-card-links {
                 display: flex;
@@ -240,6 +257,29 @@ const { Content: ThoughtContent } = await render(latestThought);
                 }
             }
         </style>
+        <style is:global>
+            /* Progressive image blur for markdown images in latest thought */
+            .thought-content img {
+                filter: blur(10px);
+                opacity: 0.75;
+                transition: filter 0.5s ease-out, opacity 0.5s ease-out;
+                background: var(--shadow-color);
+                -webkit-mask-image:
+                    linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%),
+                    linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%);
+                -webkit-mask-composite: source-in;
+                mask-image:
+                    linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%),
+                    linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%);
+                mask-composite: intersect;
+            }
+            .thought-content img.loaded {
+                filter: blur(0);
+                opacity: 1;
+                -webkit-mask-image: none;
+                mask-image: none;
+            }
+        </style>
     </head>
     <body>
         <Header />
@@ -323,10 +363,12 @@ const { Content: ThoughtContent } = await render(latestThought);
                                 return cardImgSrc && (
                                     <Image
                                         class="recent-card-image"
+                                        src={cardImgSrc}
                                         width={240}
                                         height={140}
-                                        src={cardImgSrc}
                                         alt=""
+                                        lqip="base64"
+                                        lqipSize={10}
                                         style={{ objectPosition: cardImgPos }}
                                     />
                                 );
@@ -337,5 +379,15 @@ const { Content: ThoughtContent } = await render(latestThought);
             </div>
         </main>
         <Footer />
+        <script>
+            document.querySelectorAll('.recent-card-image, .thought-content img').forEach(img => {
+                if (img.complete) {
+                    img.classList.add('loaded');
+                } else {
+                    img.onload = () => img.classList.add('loaded');
+                    img.onerror = () => img.classList.add('loaded');
+                }
+            });
+        </script>
     </body>
 </html>

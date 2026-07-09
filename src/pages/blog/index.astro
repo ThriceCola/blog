@@ -1,5 +1,5 @@
 ---
-import { Image } from "astro:assets";
+import { Image } from "astro-lqip/components";
 import { getCollection } from "astro:content";
 import BaseHead from "../../components/BaseHead.astro";
 import Footer from "../../components/Footer.astro";
@@ -141,6 +141,8 @@ const posts = (await getCollection("blog")).sort(
                                                                         height={140}
                                                                         src={cardImgSrc}
                                                                         alt=""
+                                                                        lqip="base64"
+                                                                        lqipSize={10}
                                                                         style={{ objectPosition: cardImgPos }}
                                                                     />
                                                                 );

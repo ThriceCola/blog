@@ -1,5 +1,5 @@
 ---
-import { Image } from "astro:assets";
+import { Image } from "astro-lqip/components";
 import type { CollectionEntry } from "astro:content";
 import BaseHead from "../components/BaseHead.astro";
 import Footer from "../components/Footer.astro";
@@ -30,6 +30,9 @@ const { title, description, pubDate, updatedDate, heroImage, heroImagePosition }
                 width: 100%;
                 margin: 0 auto 2em;
                 overflow: hidden;
+                border: 1px solid var(--semi-accent-color);
+                box-shadow: -6px 8px 2px 1px var(--shadow-color);
+                line-height: 0;
             }
             .hero-image img {
                 display: block;
@@ -37,8 +40,23 @@ const { title, description, pubDate, updatedDate, heroImage, heroImagePosition }
                 height: auto;
                 aspect-ratio: 720 / 360;
                 object-fit: cover;
-                border: 1px solid var(--semi-accent-color);
-                box-shadow: -6px 8px 2px 1px var(--shadow-color);
+                filter: blur(15px);
+                opacity: 0.75;
+                transition: filter 0.5s ease-out, opacity 0.5s ease-out;
+                -webkit-mask-image:
+                    linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%),
+                    linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%);
+                -webkit-mask-composite: source-in;
+                mask-image:
+                    linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%),
+                    linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%);
+                mask-composite: intersect;
+            }
+            .hero-image img.loaded {
+                filter: blur(0);
+                opacity: 1;
+                -webkit-mask-image: none;
+                mask-image: none;
             }
             .prose {
                 width: 100%;
@@ -108,6 +126,17 @@ const { title, description, pubDate, updatedDate, heroImage, heroImagePosition }
 				}*/
             }
         </style>
+        <style is:global>
+            /* Progressive image blur for markdown content (slotted, needs global) */
+            .prose img {
+                filter: blur(10px);
+                transition: filter 0.5s ease-out;
+                background: var(--shadow-color);
+            }
+            .prose img.loaded {
+                filter: blur(0);
+            }
+        </style>
     </head>
 
     <body>
@@ -118,10 +147,12 @@ const { title, description, pubDate, updatedDate, heroImage, heroImagePosition }
                     heroImage && (
                         <div class="hero-image">
                             <Image
+                                src={heroImage}
                                 width={720}
                                 height={360}
-                                src={heroImage}
                                 alt=""
+                                lqip="base64"
+                                lqipSize={10}
                                 style={{ objectPosition: heroImagePosition }}
                             />
                         </div>
@@ -148,5 +179,19 @@ const { title, description, pubDate, updatedDate, heroImage, heroImagePosition }
             </article>
         </main>
         <Footer />
+        <script>
+            function initProgressiveImages(selector) {
+                document.querySelectorAll(selector).forEach(img => {
+                    if (img.complete) {
+                        img.classList.add('loaded');
+                    } else {
+                        img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+                        img.addEventListener('error', () => img.classList.add('loaded'), { once: true });
+                    }
+                });
+            }
+            initProgressiveImages('.hero-image img');
+            initProgressiveImages('.prose img');
+        </script>
     </body>
 </html>

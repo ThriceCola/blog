@@ -117,6 +117,10 @@ function shuffle() {
     }
     friends.value = arr;
 }
+
+function onImgLoad(e: Event) {
+    (e.target as HTMLElement).classList.add('loaded');
+}
 </script>
 
 <template>
@@ -158,7 +162,7 @@ function shuffle() {
         <TransitionGroup tag="div" class="friends-grid" name="flip">
             <div v-for="friend in friends" :key="friend.key" class="friend-card card card--hover">
                 <a :href="friend.url" target="_blank" rel="noopener noreferrer" class="friend-link">
-                    <img v-if="friend.avatar" :src="friend.avatar" :alt="friend.name" class="avatar" loading="lazy" />
+                    <img v-if="friend.avatar" :src="friend.avatar" :alt="friend.name" class="avatar" loading="lazy" @load="onImgLoad" @error="onImgLoad" />
                     <span v-else class="avatar avatar-placeholder">{{ friend.name.charAt(0) }}</span>
                     <div class="card-body">
                         <span class="name">{{ friend.name }}</span>
@@ -184,7 +188,7 @@ function shuffle() {
             <div v-if="showRedirectModal && redirectFriend" class="modal-overlay" @click.self="cancelRedirect">
                 <div class="modal-card card">
                     <img v-if="redirectFriend.avatar" :src="redirectFriend.avatar" :alt="redirectFriend.name"
-                        class="redirect-avatar" />
+                                            class="redirect-avatar" @load="onImgLoad" @error="onImgLoad" />
                     <span v-else class="redirect-avatar redirect-avatar-placeholder">{{
                         redirectFriend.name.charAt(0) }}</span>
                     <div class="redirect-info">
@@ -261,6 +265,14 @@ function shuffle() {
     border-radius: 50%;
     object-fit: cover;
     flex-shrink: 0;
+    filter: blur(6px);
+    opacity: 0.7;
+    transition: filter 0.4s ease-out, opacity 0.4s ease-out;
+}
+
+.avatar.loaded {
+    filter: blur(0);
+    opacity: 1;
 }
 
 .avatar-placeholder {
@@ -337,6 +349,14 @@ function shuffle() {
     border-radius: 50%;
     object-fit: cover;
     flex-shrink: 0;
+    filter: blur(6px);
+    opacity: 0.7;
+    transition: filter 0.4s ease-out, opacity 0.4s ease-out;
+}
+
+.redirect-avatar.loaded {
+    filter: blur(0);
+    opacity: 1;
 }
 
 .redirect-avatar-placeholder {

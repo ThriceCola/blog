@@ -154,6 +154,31 @@ const renderedPosts = await Promise.all(
                 display: none;
             }
         </style>
+        <style is:global>
+            /* (other page-specific styles remain scoped above) */
+
+            /* Progressive image blur for markdown content images */
+            .thought-body img {
+                filter: blur(10px);
+                opacity: 0.75;
+                transition: filter 0.5s ease-out, opacity 0.5s ease-out;
+                background: var(--shadow-color);
+                -webkit-mask-image:
+                    linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%),
+                    linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%);
+                -webkit-mask-composite: source-in;
+                mask-image:
+                    linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%),
+                    linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%);
+                mask-composite: intersect;
+            }
+            .thought-body img.loaded {
+                filter: blur(0);
+                opacity: 1;
+                -webkit-mask-image: none;
+                mask-image: none;
+            }
+        </style>
     </head>
     <body>
         <Header />
@@ -197,6 +222,23 @@ const renderedPosts = await Promise.all(
             }
         </main>
         <Footer />
+
+        <script>
+            // Progressive image blur transition for markdown images
+            function initThoughtImages(root) {
+                (root || document).querySelectorAll('.thought-body img').forEach(img => {
+                    if (img.dataset.progressive) return;
+                    img.dataset.progressive = '1';
+                    if (img.complete) {
+                        img.classList.add('loaded');
+                    } else {
+                        img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+                        img.addEventListener('error', () => img.classList.add('loaded'), { once: true });
+                    }
+                });
+            }
+            initThoughtImages();
+        </script>
 
         <script>
             const BATCH = 5;

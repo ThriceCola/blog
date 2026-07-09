@@ -209,6 +209,8 @@ hr {
 img {
     max-width: 100%;
     height: auto;
+    /* Subtle skeleton background while image loads */
+    background: var(--shadow-color);
 }
 
 table {
