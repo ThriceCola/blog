@@ -265,26 +265,15 @@ const { Content: ThoughtContent } = await render(latestThought);
             }
         </style>
         <style is:global>
-            /* Progressive image blur for markdown images in latest thought */
+            /* Markdown content images in latest thought card:
+               hidden until fully loaded. Background color as placeholder. */
             .thought-content img {
-                filter: blur(10px);
-                opacity: 0.75;
-                transition: filter 0.5s ease-out, opacity 0.5s ease-out;
+                opacity: 0;
+                transition: opacity 0.5s ease-out;
                 background: var(--shadow-color);
-                -webkit-mask-image:
-                    linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%),
-                    linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%);
-                -webkit-mask-composite: source-in;
-                mask-image:
-                    linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%),
-                    linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%);
-                mask-composite: intersect;
             }
             .thought-content img.loaded {
-                filter: none;
                 opacity: 1;
-                -webkit-mask-image: none;
-                mask-image: none;
             }
         </style>
     </head>
@@ -367,6 +356,7 @@ const { Content: ThoughtContent } = await render(latestThought);
                                         alt=""
                                         lqip="base64"
                                         lqipSize={10}
+                                        decoding="sync"
                                         style={{ objectPosition: cardImgPos }}
                                     />
                                 );

@@ -213,11 +213,15 @@ img {
     background: var(--shadow-color);
 }
 
-/* astro-lqip: hide <img> until fully loaded, so the LQIP ::after
-   placeholder shows through during slow-network progressive decode.
-   The inline onload handler fades the LQIP out (opacity 1→0, 1s),
-   while .loaded fades the sharp image in (opacity 0→1, 0.4s),
-   creating a smooth crossfade. */
+/* astro-lqip: put the LQIP ::after ON TOP (z-index: 2) so it renders
+   above the <img> (which has opacity:0 during loading). Without this,
+   some browsers skip rendering the ::after behind a higher-z-index img.
+   When the image loads, the inline onload handler fades the LQIP out
+   (opacity 1→0, 1s) while .loaded fades the sharp image in (0→1, 0.4s). */
+[data-astro-lqip]::after {
+    z-index: 2;
+}
+
 [data-astro-lqip] img {
     opacity: 0;
     transition: opacity 0.4s ease-out;
