@@ -101,7 +101,18 @@ function shuffle() {
 }
 
 function onImgLoad(e: Event) {
-    (e.target as HTMLElement).classList.add('loaded');
+    const img = e.target as HTMLImageElement;
+    // Bypass blur transition for already-cached images
+    if (img.complete && e.type === 'load') {
+        // Cached before onload fired; skip transition
+        img.dataset.lqipCached = '1';
+        img.style.transition = 'none';
+        img.classList.add('loaded');
+        void img.offsetHeight;
+        img.style.transition = '';
+    } else {
+        img.classList.add('loaded');
+    }
 }
 </script>
 
@@ -144,8 +155,19 @@ function onImgLoad(e: Event) {
         <TransitionGroup tag="div" class="friends-grid" name="flip">
             <div v-for="friend in friends" :key="friend.key" class="friend-card card card--hover">
                 <a :href="friend.url" target="_blank" rel="noopener noreferrer" class="friend-link">
-                    <img v-if="friend.avatar" :src="friend.avatar" :alt="friend.name" class="avatar" loading="lazy" @load="onImgLoad" @error="onImgLoad" />
-                    <span v-else class="avatar avatar-placeholder">{{ friend.name.charAt(0) }}</span>
+                    <span v-if="friend.avatar" class="avatar-wrapper">
+                        <img
+                            :src="friend.avatar"
+                            :alt="friend.name"
+                            class="avatar"
+                            loading="lazy"
+                            @load="onImgLoad"
+                            @error="onImgLoad"
+                        />
+                    </span>
+                    <span v-else class="avatar-wrapper avatar-wrapper--placeholder">
+                        <span class="avatar avatar-placeholder">{{ friend.name.charAt(0) }}</span>
+                    </span>
                     <div class="card-body">
                         <span class="name">{{ friend.name }}</span>
                         <span v-if="friend.description" class="desc line-clamp-2">{{ friend.description }}</span>
@@ -169,10 +191,19 @@ function onImgLoad(e: Event) {
         <Transition name="modal">
             <div v-if="showRedirectModal && redirectFriend" class="modal-overlay" @click.self="cancelRedirect">
                 <div class="modal-card card">
-                    <img v-if="redirectFriend.avatar" :src="redirectFriend.avatar" :alt="redirectFriend.name"
-                                            class="redirect-avatar" @load="onImgLoad" @error="onImgLoad" />
-                    <span v-else class="redirect-avatar redirect-avatar-placeholder">{{
-                        redirectFriend.name.charAt(0) }}</span>
+                    <span v-if="redirectFriend.avatar" class="avatar-wrapper">
+                        <img
+                            :src="redirectFriend.avatar"
+                            :alt="redirectFriend.name"
+                            class="redirect-avatar"
+                            @load="onImgLoad"
+                            @error="onImgLoad"
+                        />
+                    </span>
+                    <span v-else class="avatar-wrapper avatar-wrapper--placeholder">
+                        <span class="redirect-avatar redirect-avatar-placeholder">{{
+                            redirectFriend.name.charAt(0) }}</span>
+                    </span>
                     <div class="redirect-info">
                         <span class="redirect-label">即将前往</span>
                         <span class="redirect-name">{{ redirectFriend.name }}</span>
@@ -233,14 +264,34 @@ function onImgLoad(e: Event) {
     color: inherit;
 }
 
+/* ---- LQIP wrapper: background color acts as placeholder before image loads ---- */
+.avatar-wrapper {
+    display: block;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    /* Subtle tinted background that shows through the blurry loading image */
+    background: color-mix(in srgb, var(--semi-accent-color) 18%, transparent);
+}
+
+.avatar-wrapper--placeholder {
+    background: transparent;
+}
+
 .avatar {
     width: 42px;
     height: 42px;
     border-radius: 50%;
     object-fit: cover;
-    flex-shrink: 0;
+    display: block;
+    /*
+     * LQIP effect: the real image starts blurred + semi-transparent.
+     * The wrapper's background color shows through as a subtle placeholder.
+     * On load, the image transitions to clear.
+     */
     filter: blur(6px);
-    opacity: 0.7;
+    opacity: 0.3;
     transition: filter 0.4s ease-out, opacity 0.4s ease-out;
 }
 
@@ -253,10 +304,13 @@ function onImgLoad(e: Event) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    width: 42px;
+    height: 42px;
     font-size: 1.1em;
     font-weight: 600;
     color: var(--accent-color);
     background: color-mix(in srgb, var(--accent-color) 12%, transparent);
+    border-radius: 50%;
 }
 
 .card-body {
@@ -322,9 +376,9 @@ function onImgLoad(e: Event) {
     height: 64px;
     border-radius: 50%;
     object-fit: cover;
-    flex-shrink: 0;
+    display: block;
     filter: blur(6px);
-    opacity: 0.7;
+    opacity: 0.3;
     transition: filter 0.4s ease-out, opacity 0.4s ease-out;
 }
 
@@ -337,10 +391,13 @@ function onImgLoad(e: Event) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    width: 64px;
+    height: 64px;
     font-size: 1.6em;
     font-weight: 600;
     color: var(--accent-color);
     background: color-mix(in srgb, var(--accent-color) 12%, transparent);
+    border-radius: 50%;
 }
 
 .redirect-info {
