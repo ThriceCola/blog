@@ -151,6 +151,7 @@ const { Content: ThoughtContent } = await render(latestThought);
                 filter: blur(15px);
                 opacity: 0.75;
                 transition: filter 0.5s ease-out, opacity 0.5s ease-out;
+                will-change: filter, opacity;
                 -webkit-mask-image:
                     linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%),
                     linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%);
@@ -163,6 +164,7 @@ const { Content: ThoughtContent } = await render(latestThought);
             .recent-card-image.loaded {
                 filter: blur(0);
                 opacity: 1;
+                will-change: auto;
                 -webkit-mask-image: none;
                 mask-image: none;
             }
@@ -380,12 +382,18 @@ const { Content: ThoughtContent } = await render(latestThought);
         </main>
         <Footer />
         <script>
-            document.querySelectorAll('.recent-card-image, .thought-content img').forEach(img => {
+            // Progressive image blur transition.
+            // Uses addEventListener (not onload=) to preserve astro-lqip's inline handler.
+            function markLoaded(img) {
+                img.classList.add('loaded');
+            }
+            document.querySelectorAll('img.recent-card-image, .thought-content img').forEach(img => {
+                if (img.tagName !== 'IMG') return;
                 if (img.complete) {
                     img.classList.add('loaded');
                 } else {
-                    img.onload = () => img.classList.add('loaded');
-                    img.onerror = () => img.classList.add('loaded');
+                    img.addEventListener('load', () => markLoaded(img), { once: true });
+                    img.addEventListener('error', () => markLoaded(img), { once: true });
                 }
             });
         </script>

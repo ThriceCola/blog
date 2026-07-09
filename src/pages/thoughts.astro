@@ -224,7 +224,7 @@ const renderedPosts = await Promise.all(
         <Footer />
 
         <script>
-            // Progressive image blur transition for markdown images
+            // Progressive image blur transition for markdown images.
             function initThoughtImages(root) {
                 (root || document).querySelectorAll('.thought-body img').forEach(img => {
                     if (img.dataset.progressive) return;
@@ -269,6 +269,8 @@ const renderedPosts = await Promise.all(
                         const end = Math.min(toShow + BATCH, cards.length);
                         for (let i = toShow; i < end; i++) {
                             cards[i].classList.remove("hidden-post");
+                            // Re-initialize progressive images on newly revealed cards
+                            initThoughtImages(cards[i]);
                         }
                         visibleCount = cards.length - end;
 
