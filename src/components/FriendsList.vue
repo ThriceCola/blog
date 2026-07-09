@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { parse } from 'smol-toml';
 
 interface Friend {
@@ -15,6 +15,12 @@ const friends = ref<Friend[]>([]);
 const loading = ref(true);
 const error = ref(false);
 const shuffled = ref(false);
+
+// Redirect modal
+const showRedirectModal = ref(false);
+const redirectFriend = ref<Friend | null>(null);
+const redirectCountdown = ref(6);
+let redirectTimer: ReturnType<typeof setInterval> | null = null;
 
 const loadingTexts = ['加载中...', '让我找找看...', '马上就好...'];
 const loadingText = ref(loadingTexts[0]);
@@ -65,11 +71,43 @@ onMounted(async () => {
     }
 });
 
+function cancelRedirect() {
+    if (redirectTimer) {
+        clearInterval(redirectTimer);
+        redirectTimer = null;
+    }
+    showRedirectModal.value = false;
+    redirectFriend.value = null;
+    redirectCountdown.value = 3;
+}
+
+function executeRedirect(friend: Friend) {
+    window.open(friend.url, '_blank', 'noopener,noreferrer');
+    cancelRedirect();
+}
+
 function randomFriend() {
     if (friends.value.length === 0) return;
     const idx = Math.floor(Math.random() * friends.value.length);
-    window.open(friends.value[idx].url, '_blank', 'noopener,noreferrer');
+    const friend = friends.value[idx];
+
+    redirectFriend.value = friend;
+    redirectCountdown.value = 6;
+    showRedirectModal.value = true;
+
+    redirectTimer = setInterval(() => {
+        redirectCountdown.value--;
+        if (redirectCountdown.value <= 0) {
+            executeRedirect(friend);
+        }
+    }, 1000);
 }
+
+onUnmounted(() => {
+    if (redirectTimer) {
+        clearInterval(redirectTimer);
+    }
+});
 
 function shuffle() {
     const arr = [...friends.value];
@@ -139,6 +177,38 @@ function shuffle() {
             </div>
         </TransitionGroup>
     </div>
+
+    <!-- Redirect confirmation modal -->
+    <Teleport to="body">
+        <Transition name="modal">
+            <div v-if="showRedirectModal && redirectFriend" class="redirect-overlay" @click.self="cancelRedirect">
+                <div class="redirect-card card">
+                    <img v-if="redirectFriend.avatar" :src="redirectFriend.avatar" :alt="redirectFriend.name"
+                        class="redirect-avatar" />
+                    <span v-else class="redirect-avatar redirect-avatar-placeholder">{{
+                        redirectFriend.name.charAt(0) }}</span>
+                    <div class="redirect-info">
+                        <span class="redirect-label">即将前往</span>
+                        <span class="redirect-name">{{ redirectFriend.name }}</span>
+                        <span v-if="redirectFriend.description" class="redirect-desc">{{ redirectFriend.description }}</span>
+                    </div>
+                    <div class="redirect-countdown-ring">
+                        <svg viewBox="0 0 48 48">
+                            <circle class="countdown-bg-ring" cx="24" cy="24" r="20" />
+                            <circle class="countdown-fg-ring" cx="24" cy="24" r="20"
+                                :style="{ strokeDashoffset: (1 - redirectCountdown / 6) * 125.6 + 'px' }" />
+                        </svg>
+                        <span class="countdown-text">{{ redirectCountdown }}</span>
+                    </div>
+                    <p class="redirect-hint">{{ redirectCountdown }}秒后自动转跳</p>
+                    <div class="redirect-actions">
+                        <button class="btn btn--cancel" @click="cancelRedirect">取消</button>
+                        <button class="btn btn--go" @click="executeRedirect(redirectFriend)">立即前往</button>
+                    </div>
+                </div>
+            </div>
+        </Transition>
+    </Teleport>
 </template>
 
 <style scoped>
@@ -284,6 +354,174 @@ function shuffle() {
 
 .flip-move {
     transition: transform 0.35s ease;
+}
+
+/* ===== Redirect modal ===== */
+.redirect-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1em;
+    background: color-mix(in srgb, var(--background-color) 80%, transparent);
+}
+
+.redirect-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 2em 2.5em;
+    max-width: 380px;
+    width: 100%;
+    text-align: center;
+    animation: redirect-enter 0.3s ease;
+}
+
+@keyframes redirect-enter {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.redirect-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.redirect-avatar-placeholder {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6em;
+    font-weight: 600;
+    color: var(--accent-color);
+    background: color-mix(in srgb, var(--accent-color) 12%, transparent);
+}
+
+.redirect-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.redirect-label {
+    font-size: 0.85em;
+    color: var(--semi-accent-color);
+}
+
+.redirect-name {
+    font-size: 1.15em;
+    font-weight: 700;
+    color: var(--normal-text-color);
+}
+
+.redirect-desc {
+    font-size: 0.8em;
+    color: var(--semi-accent-color);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-clamp: 2;
+    overflow: hidden;
+}
+
+.redirect-countdown-ring {
+    position: relative;
+    width: 56px;
+    height: 56px;
+}
+
+.redirect-countdown-ring svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.countdown-bg-ring {
+    fill: none;
+    stroke: color-mix(in srgb, var(--semi-accent-color) 20%, transparent);
+    stroke-width: 4;
+}
+
+.countdown-fg-ring {
+    fill: none;
+    stroke: var(--accent-color);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 125.6;
+    transition: stroke-dashoffset 1s linear;
+}
+
+.countdown-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3em;
+    font-weight: 700;
+    color: var(--accent-color);
+}
+
+.redirect-hint {
+    margin: 0;
+    font-size: 0.85em;
+    color: var(--semi-accent-color);
+}
+
+.redirect-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.redirect-actions .btn {
+    font-size: 0.9em;
+    padding: 7px 22px;
+    background: transparent;
+    border: 1px solid var(--semi-accent-color);
+    color: var(--semi-accent-color);
+    box-shadow: -4px 5px 2px 1px var(--shadow-color);
+    border-radius: 0;
+    transition:
+        color 0.2s,
+        border-color 0.2s,
+        box-shadow 0.3s;
+}
+
+.redirect-actions .btn:hover {
+    color: var(--accent-color);
+    border-color: var(--semi-accent-color);
+    box-shadow: -6px 7px 2px 1px var(--shadow-color);
+}
+
+.redirect-actions .btn:active {
+    box-shadow: -2px 3px 1px 1px var(--shadow-color);
+}
+
+/* Modal transition */
+.modal-enter-active {
+    transition: opacity 0.25s ease;
+}
+
+.modal-leave-active {
+    transition: opacity 0.2s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+    opacity: 0;
 }
 
 @media (max-width: 560px) {
