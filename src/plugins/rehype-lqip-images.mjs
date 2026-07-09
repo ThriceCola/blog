@@ -30,23 +30,25 @@ async function generateLQIP(url) {
     const { base64, metadata } = await getPlaiceholder(buffer, { size: 10 });
     return { base64, width: metadata.width, height: metadata.height };
   } catch (e) {
-    console.warn(`[rehype-lqip] Failed for ${url}:`, e.message);
+    const message = e instanceof Error ? e.message : String(e);
+    console.warn(`[rehype-lqip] Failed for ${url}:`, message);
     return null;
   }
 }
 
 /**
- * @returns {import('unified').Transformer}
+ * @returns {import('unified').Transformer<import('hast').Root, import('hast').Root>}
  */
 export default function rehypeLqipImages() {
   /** @type {Map<string, Promise<{base64: string, width: number, height: number} | null>>} */
   const lqipCache = new Map();
 
   return async (tree) => {
-    /** @type {Array<{node: any, index: number, parent: any, src: string}>} */
+    /** @type {Array<{node: any, index: number | undefined, parent: any, src: string}>} */
     const tasks = [];
 
     visit(tree, "element", (node, index, parent) => {
+      if (index === undefined) return;
       if (node.tagName !== "img") return;
       const src = node.properties?.src;
       if (!src || !isRemote(String(src))) return;
