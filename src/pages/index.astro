@@ -281,7 +281,7 @@ const { Content: ThoughtContent } = await render(latestThought);
                 mask-composite: intersect;
             }
             .thought-content img.loaded {
-                filter: blur(0);
+                filter: none;
                 opacity: 1;
                 -webkit-mask-image: none;
                 mask-image: none;
@@ -387,24 +387,19 @@ const { Content: ThoughtContent } = await render(latestThought);
         </main>
         <Footer />
         <script>
-            // Progressive image blur transition.
-            // Initializes on first load AND after each astro:transitions SPA navigation.
-            function markLoaded(img) {
-                img.classList.add('loaded');
-            }
+            // Progressive image blur transition for markdown content images.
+            // Card image is handled by astro-lqip (LQIP overlay covers loading).
             function init() {
                 document.querySelectorAll('.thought-content img').forEach(img => {
-                    if (img.tagName !== 'IMG') return;
                     if (img.complete) {
                         img.classList.add('loaded');
                     } else {
-                        img.addEventListener('load', () => markLoaded(img), { once: true });
-                        img.addEventListener('error', () => markLoaded(img), { once: true });
+                        img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+                        img.addEventListener('error', () => img.classList.add('loaded'), { once: true });
                     }
                 });
             }
             init();
-            // Re-run after each SPA navigation (astro:transitions)
             if (!window.__indexImgInit) {
                 window.__indexImgInit = true;
                 document.addEventListener('astro:page-load', init);
