@@ -170,13 +170,14 @@
 
             bar.classList.add("loading");
 
-            // 入场动画完成后切到浮动
-            const ENTER_DURATION = 500;
-            setTimeout(onEnterDone, ENTER_DURATION);
+            // 入场动画完成后，等一会儿再开始波浪浮动
+            const ENTER_DURATION = 500; // 入场动画耗时
+            const WAVE_DELAY = 500; // 入场完成后停顿一会儿
+            setTimeout(onEnterDone, ENTER_DURATION + WAVE_DELAY);
 
             safetyTimer = setTimeout(() => {
                 if (bar.classList.contains("loading")) startExit();
-            }, 8000);
+            }, 15000);
         });
 
         document.addEventListener("astro:after-preparation", () => {
