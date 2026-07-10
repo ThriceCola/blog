@@ -102,17 +102,7 @@ function shuffle() {
 
 function onImgLoad(e: Event) {
     const img = e.target as HTMLImageElement;
-    // Bypass blur transition for already-cached images
-    if (img.complete && e.type === 'load') {
-        // Cached before onload fired; skip transition
-        img.dataset.lqipCached = '1';
-        img.style.transition = 'none';
-        img.classList.add('loaded');
-        void img.offsetHeight;
-        img.style.transition = '';
-    } else {
-        img.classList.add('loaded');
-    }
+    img.classList.add('loaded');
 }
 </script>
 
@@ -190,8 +180,8 @@ function onImgLoad(e: Event) {
     <Teleport to="body">
         <Transition name="modal">
             <div v-if="showRedirectModal && redirectFriend" class="modal-overlay" @click.self="cancelRedirect">
-                <div class="modal-card card">
-                    <span v-if="redirectFriend.avatar" class="avatar-wrapper">
+                <div class="modal-card">
+                    <span v-if="redirectFriend.avatar" class="redirect-avatar-wrapper">
                         <img
                             :src="redirectFriend.avatar"
                             :alt="redirectFriend.name"
@@ -200,12 +190,11 @@ function onImgLoad(e: Event) {
                             @error="onImgLoad"
                         />
                     </span>
-                    <span v-else class="avatar-wrapper avatar-wrapper--placeholder">
+                    <span v-else class="redirect-avatar-wrapper redirect-avatar-wrapper--placeholder">
                         <span class="redirect-avatar redirect-avatar-placeholder">{{
                             redirectFriend.name.charAt(0) }}</span>
                     </span>
                     <div class="redirect-info">
-                        <span class="redirect-label">即将前往</span>
                         <span class="redirect-name">{{ redirectFriend.name }}</span>
                         <span v-if="redirectFriend.description" class="redirect-desc line-clamp-2">{{ redirectFriend.description }}</span>
                     </div>
@@ -371,12 +360,41 @@ function onImgLoad(e: Event) {
 }
 
 /* ===== Redirect modal (component-specific) ===== */
+.modal-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 22px 24px 18px;
+    max-width: 380px;
+    width: 100%;
+    text-align: center;
+    background: var(--background-color);
+    border: 1px solid var(--semi-accent-color);
+    box-shadow: -6px 8px 2px 1px var(--shadow-color);
+    animation: modal-enter 0.3s ease;
+}
+
+.redirect-avatar-wrapper {
+    display: block;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: color-mix(in srgb, var(--semi-accent-color) 18%, transparent);
+}
+
+.redirect-avatar-wrapper--placeholder {
+    background: transparent;
+}
+
 .redirect-avatar {
     width: 64px;
     height: 64px;
     border-radius: 50%;
     object-fit: cover;
     display: block;
+    max-width: none;
     filter: blur(6px);
     opacity: 0.3;
     transition: filter 0.4s ease-out, opacity 0.4s ease-out;
@@ -403,6 +421,7 @@ function onImgLoad(e: Event) {
 .redirect-info {
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 4px;
 }
 
