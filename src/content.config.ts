@@ -24,7 +24,13 @@ const thoughts = defineCollection({
   loader: glob({ base: './src/content/thoughts', pattern: '**/*.{md,mdx}' }),
   schema: z.object({
     content: z.string().optional(),
-    pubDate: z.coerce.date(),
+    pubDate: z.preprocess((arg) => {
+      if (typeof arg === 'string') {
+        // 将 "2026-07-11 10:00:00" / "2026-07-11 10:00" 转为标准 ISO 格式
+        return arg.replace(' ', 'T');
+      }
+      return arg;
+    }, z.coerce.date()),
   }),
 });
 
