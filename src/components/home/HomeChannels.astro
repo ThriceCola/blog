@@ -1,0 +1,95 @@
+---
+import { Image } from "astro-lqip/components";
+import FormattedDate from "../FormattedDate.astro";
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+	thought: CollectionEntry<"thoughts">;
+	blog: CollectionEntry<"blog">;
+}
+
+const { thought, blog } = Astro.props;
+const cardImgSrc = blog.data.cardImage ?? blog.data.heroImage;
+const cardImgPos = blog.data.cardImage
+	? blog.data.cardImagePosition
+	: blog.data.heroImagePosition;
+---
+
+{/* Mobile-only: list-page entries above content */}
+<div class="home-entries">
+	<a class="entry-card card card--hover" href="/thoughts">
+		<strong>碎碎念</strong>
+		<span>日常与碎片记录</span>
+	</a>
+	<a class="entry-card card card--hover" href="/blog">
+		<strong>文章</strong>
+		<span>阅读一些长文</span>
+	</a>
+</div>
+
+<section class="home-channels">
+	<article class="channel card card--hover">
+		<header class="channel__head">
+			<a href="/thoughts">碎碎念</a>
+			<a class="channel__more" href="/thoughts">查看全部 →</a>
+		</header>
+		<div class="channel__body">
+			<p class="channel__meta">
+				<span class="channel__label">碎碎念 · </span>
+				<span class="channel__latest">最新 · </span>
+				<FormattedDate date={thought.data.pubDate} />
+			</p>
+			<div class="channel__content thought-content">
+				<slot name="thought" />
+			</div>
+		</div>
+		<footer class="channel__foot">
+			<a href="/thoughts">查看更多碎碎念 →</a>
+		</footer>
+	</article>
+
+	<article class="channel card card--hover">
+		<header class="channel__head">
+			<a href="/blog">文章</a>
+			<a class="channel__more" href="/blog">查看全部 →</a>
+		</header>
+		<div class="channel__body">
+			<p class="channel__meta">
+				<span class="channel__label">文章 · </span>
+				<span class="channel__latest">最新 · </span>
+				<FormattedDate date={blog.data.pubDate} />
+			</p>
+			<a href={`/blog/${blog.id}/`} class="channel__title">
+				{blog.data.title}
+			</a>
+			{
+				blog.data.description && (
+					<p class="channel__desc line-clamp-3">
+						{blog.data.description}
+					</p>
+				)
+			}
+			{
+				cardImgSrc && (
+					<Image
+						class="channel__image"
+						src={cardImgSrc}
+						width={480}
+						height={270}
+						alt=""
+						lqip="base64"
+						lqipSize={10}
+						decoding="sync"
+						style={{ objectPosition: cardImgPos }}
+					/>
+				)
+			}
+			<p class="channel__links">
+				<a href={`/blog/${blog.id}/`}>阅读全文 →</a>
+			</p>
+		</div>
+		<footer class="channel__foot">
+			<a href="/blog">查看更多文章 →</a>
+		</footer>
+	</article>
+</section>
