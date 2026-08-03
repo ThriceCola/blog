@@ -1,0 +1,54 @@
+---
+import { Image } from "astro-lqip/components";
+import FormattedDate from "../FormattedDate.astro";
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+	blog: CollectionEntry<"blog">;
+	latest?: boolean;
+}
+
+const { blog, latest = false } = Astro.props;
+
+const cardImgSrc = blog.data.cardImage ?? blog.data.heroImage;
+const cardImgPos = blog.data.cardImage
+	? blog.data.cardImagePosition
+	: blog.data.heroImagePosition;
+---
+
+<article class="channel card card--hover">
+	<div class="channel__body">
+		<p class="channel__meta">
+			<span class="channel__label">文章 · </span>
+			{latest && <span class="channel__latest">最新 · </span>}
+			<FormattedDate date={blog.data.pubDate} />
+		</p>
+		<a href={`/blog/${blog.id}/`} class="channel__title">
+			{blog.data.title}
+		</a>
+		{
+			blog.data.description && (
+				<p class="channel__desc line-clamp-3">{blog.data.description}</p>
+			)
+		}
+		{
+			cardImgSrc && (
+				<Image
+					class="channel__image"
+					src={cardImgSrc}
+					width={480}
+					height={270}
+					alt=""
+					lqip="base64"
+					lqipSize={10}
+					decoding={latest ? "sync" : "async"}
+					loading={latest ? "eager" : "lazy"}
+					style={{ objectPosition: cardImgPos }}
+				/>
+			)
+		}
+		<p class="channel__links">
+			<a href={`/blog/${blog.id}/`}>阅读全文 →</a>
+		</p>
+	</div>
+</article>

@@ -10,7 +10,13 @@ import rehypeLqipImages from './src/plugins/rehype-lqip-images.mjs';
 // https://astro.build/config
 export default defineConfig({
   site: 'https://blog.thricecola.com',
-  integrations: [mdx(), sitemap(), vue()],
+  integrations: [
+    mdx(),
+    sitemap({
+      filter: (page) => !page.includes('/home-more'),
+    }),
+    vue(),
+  ],
   markdown: {
     rehypePlugins: [rehypeLqipImages],
     shikiConfig: {

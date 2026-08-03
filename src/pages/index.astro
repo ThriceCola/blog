@@ -9,15 +9,12 @@ import { ClientRouter } from "astro:transitions";
 import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
 import "../styles/home.css";
 
-const PREVIEW_COUNT = 3;
-
-const latestBlogs = (await getCollection("blog"))
-	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-	.slice(0, PREVIEW_COUNT);
-
-const latestThoughts = (await getCollection("thoughts"))
-	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-	.slice(0, PREVIEW_COUNT);
+const blogs = (await getCollection("blog")).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+const thoughts = (await getCollection("thoughts")).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
 ---
 
 <!doctype html>
@@ -35,7 +32,11 @@ const latestThoughts = (await getCollection("thoughts"))
 				<h3>{SITE_DESCRIPTION}</h3>
 				<p>你是从哪里找到我的呢?</p>
 			</div>
-			<HomeChannels thoughts={latestThoughts} blogs={latestBlogs} />
+			<HomeChannels
+				thought={thoughts[0]}
+				blog={blogs[0]}
+				hasMore={blogs.length > 1 || thoughts.length > 1}
+			/>
 		</main>
 		<Footer />
 		<script>
@@ -46,61 +47,50 @@ const latestThoughts = (await getCollection("thoughts"))
 			}
 
 			function initHomeImages() {
-				document
-					.querySelectorAll("[data-astro-lqip]")
-					.forEach((wrapper) => {
-						const img = wrapper.querySelector("img");
-						if (!img || img.dataset.lqipInit) return;
-						img.dataset.lqipInit = "1";
-						if (img.complete) {
-							wrapper.classList.add("lqip-cached");
-							img.style.transition = "none";
-							img.classList.add("loaded");
-							img.offsetHeight;
-							img.style.transition = "";
-						} else {
-							img.addEventListener(
-								"load",
-								() => img.classList.add("loaded"),
-								{ once: true },
-							);
-							img.addEventListener(
-								"error",
-								() => img.classList.add("loaded"),
-								{ once: true },
-							);
-						}
-					});
-				document
-					.querySelectorAll(".thought-content img")
-					.forEach((el) => {
-						const img = el as HTMLImageElement;
-						if (img.dataset.progressive) return;
-						img.dataset.progressive = "1";
-						if (img.complete) {
-							img.style.transition = "none";
-							img.classList.add("loaded");
-							img.offsetHeight;
-							img.style.transition = "";
-						} else {
-							img.addEventListener(
-								"load",
-								() => img.classList.add("loaded"),
-								{ once: true },
-							);
-							img.addEventListener(
-								"error",
-								() => img.classList.add("loaded"),
-								{ once: true },
-							);
-						}
-					});
+				document.querySelectorAll("[data-astro-lqip]").forEach((wrapper) => {
+					const img = wrapper.querySelector("img");
+					if (!img || img.dataset.lqipInit) return;
+					img.dataset.lqipInit = "1";
+					if (img.complete) {
+						wrapper.classList.add("lqip-cached");
+						img.style.transition = "none";
+						img.classList.add("loaded");
+						img.offsetHeight;
+						img.style.transition = "";
+					} else {
+						img.addEventListener("load", () => img.classList.add("loaded"), {
+							once: true,
+						});
+						img.addEventListener("error", () => img.classList.add("loaded"), {
+							once: true,
+						});
+					}
+				});
+				document.querySelectorAll(".thought-content img").forEach((el) => {
+					const img = el as HTMLImageElement;
+					if (img.dataset.progressive) return;
+					img.dataset.progressive = "1";
+					if (img.complete) {
+						img.style.transition = "none";
+						img.classList.add("loaded");
+						img.offsetHeight;
+						img.style.transition = "";
+					} else {
+						img.addEventListener("load", () => img.classList.add("loaded"), {
+							once: true,
+						});
+						img.addEventListener("error", () => img.classList.add("loaded"), {
+							once: true,
+						});
+					}
+				});
 			}
 
 			initHomeImages();
 			if (!window.__homeImgInit) {
 				window.__homeImgInit = true;
 				document.addEventListener("astro:page-load", initHomeImages);
+				document.addEventListener("home:content", initHomeImages);
 			}
 		</script>
 	</body>

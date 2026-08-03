@@ -29,7 +29,7 @@ import HeaderLink from "./HeaderLink.astro";
             </div>
             <div class="theme-dropdown">
                 <button
-                    class="theme-btn"
+                    class="btn-ghost theme-btn"
                     aria-label="主题切换"
                     aria-haspopup="true"
                     aria-expanded="false"
@@ -614,29 +614,6 @@ import HeaderLink from "./HeaderLink.astro";
     .theme-btn {
         width: 32px;
         height: 28px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border: none;
-        background: transparent;
-        color: var(--semi-accent-color);
-        cursor: pointer;
-        transition:
-            color 0.25s,
-            border-color 0.25s,
-            box-shadow 0.3s;
-        padding: 0;
-        box-shadow: none;
-    }
-
-    .theme-btn:hover {
-        color: var(--accent-color);
-        border: 1px solid var(--accent-color);
-        box-shadow: -4px 5px 2px 1px var(--shadow-color);
-    }
-
-    .theme-btn:active {
-        box-shadow: -2px 3px 1px 1px var(--shadow-color);
     }
 
     .theme-btn__icon {

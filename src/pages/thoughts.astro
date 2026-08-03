@@ -11,6 +11,8 @@ const thoughts = (await getCollection("thoughts")).sort(
     (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
 
+const BATCH = 6;
+
 const renderedPosts = await Promise.all(
     thoughts.map(async (post) => {
         const { Content } = await render(post);
@@ -30,8 +32,15 @@ const renderedPosts = await Promise.all(
         <LoadingBar />
         <style>
             main {
-                max-width: 640px;
+                max-width: 960px;
                 margin: 0 auto;
+            }
+
+            #thoughts-feed {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1.5em;
+                align-items: start;
             }
 
             .thought-card {
@@ -39,7 +48,7 @@ const renderedPosts = await Promise.all(
                 box-shadow: -6px 8px 2px 1px var(--shadow-color);
                 background-color: var(--background-color);
                 padding: 24px 28px;
-                margin-bottom: 1.75rem;
+                margin: 0;
                 transition: box-shadow 0.2s;
             }
             .thought-card:hover {
@@ -120,10 +129,15 @@ const renderedPosts = await Promise.all(
                 margin: 0.8em 0;
             }
 
+            @media (max-width: 720px) {
+                #thoughts-feed {
+                    grid-template-columns: 1fr;
+                }
+            }
+
             @media (max-width: 480px) {
                 .thought-card {
                     padding: 16px 14px;
-                    margin-bottom: 1.25rem;
                 }
                 .thought-body {
                     font-size: 0.9em;
@@ -134,7 +148,6 @@ const renderedPosts = await Promise.all(
                 }
             }
 
-            /* === Infinite scroll === */
             .hidden-post {
                 display: none;
             }
@@ -144,21 +157,17 @@ const renderedPosts = await Promise.all(
                 width: 100%;
             }
 
-            .loading-indicator {
+            .feed-end {
                 text-align: center;
                 padding: 1.5em 0;
                 color: var(--semi-accent-color);
                 font-size: 0.9em;
             }
-            .loading-indicator.hidden {
+            .feed-end[hidden] {
                 display: none;
             }
         </style>
         <style is:global>
-            /* (other page-specific styles remain scoped above) */
-
-            /* Markdown content images: hidden until fully loaded.
-               Background color serves as a subtle placeholder. */
             .thought-body img {
                 opacity: 0;
                 transition: opacity 0.5s ease-out;
@@ -183,9 +192,8 @@ const renderedPosts = await Promise.all(
                         <article
                             class:list={[
                                 "thought-card",
-                                i >= 5 && "hidden-post",
+                                i >= BATCH && "hidden-post",
                             ]}
-                            data-index={i}
                         >
                             <p class="thought-date">
                                 <FormattedDate date={post.data.pubDate} />
@@ -199,100 +207,88 @@ const renderedPosts = await Promise.all(
             </section>
 
             <div id="sentinel"></div>
-
-            <p id="loading-text" class="loading-indicator hidden">加载中...</p>
-
             {
-                renderedPosts.length > 5 && (
-                    <p id="all-loaded" class="loading-indicator hidden">
-                        — 已经到底啦 —
-                    </p>
+                renderedPosts.length > BATCH && (
+                    <p id="feed-end" class="feed-end" hidden>— 已经到底啦 —</p>
                 )
             }
         </main>
         <Footer />
 
         <script>
-            // Progressive image blur transition for markdown images.
-            // Initializes on first load AND after each astro:transitions SPA navigation.
-            function initThoughtImages(root) {
-                (root || document).querySelectorAll('.thought-body img').forEach(img => {
+            declare global {
+                interface Window {
+                    __thoughtsInit?: boolean;
+                }
+            }
+
+            function initThoughtImages(root?: ParentNode) {
+                (root || document).querySelectorAll(".thought-body img").forEach((el) => {
+                    const img = el as HTMLImageElement;
                     if (img.dataset.progressive) return;
-                    img.dataset.progressive = '1';
+                    img.dataset.progressive = "1";
                     if (img.complete) {
-                        // Cached image: skip the opacity transition entirely
-                        img.style.transition = 'none';
-                        img.classList.add('loaded');
+                        img.style.transition = "none";
+                        img.classList.add("loaded");
                         img.offsetHeight;
-                        img.style.transition = '';
+                        img.style.transition = "";
                     } else {
-                        img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
-                        img.addEventListener('error', () => img.classList.add('loaded'), { once: true });
+                        img.addEventListener("load", () => img.classList.add("loaded"), {
+                            once: true,
+                        });
+                        img.addEventListener("error", () => img.classList.add("loaded"), {
+                            once: true,
+                        });
                     }
                 });
             }
-            function init() {
+
+            function initThoughtFeed() {
                 initThoughtImages();
-            }
-            init();
-            // Re-run after each SPA navigation (astro:transitions)
-            if (!window.__thoughtsImgInit) {
-                window.__thoughtsImgInit = true;
-                document.addEventListener('astro:page-load', init);
-            }
-        </script>
 
-        <script>
-            const BATCH = 5;
-            const feed = document.getElementById("thoughts-feed");
-            const sentinel = document.getElementById("sentinel");
-            const loadingText = document.getElementById("loading-text");
-            const allLoaded = document.getElementById("all-loaded");
+                const BATCH = 6;
+                const feed = document.getElementById("thoughts-feed");
+                const sentinel = document.getElementById("sentinel");
+                const feedEnd = document.getElementById("feed-end");
+                if (!feed || !sentinel || feed.dataset.bound) return;
+                feed.dataset.bound = "1";
 
-            if (feed && sentinel && loadingText && allLoaded) {
-                const cards = /** @type {NodeListOf<HTMLElement>} */ (
-                    feed.querySelectorAll(".thought-card.hidden-post")
-                );
-                let visibleCount = cards.length;
-                let isLoading = false;
+                const cards = feed.querySelectorAll<HTMLElement>(".thought-card.hidden-post");
+                let remaining = cards.length;
+                let loading = false;
 
                 const observer = new IntersectionObserver(
-                    async (entries) => {
-                        if (!entries[0].isIntersecting || isLoading) return;
-                        if (visibleCount <= 0) return;
+                    (entries) => {
+                        if (!entries[0].isIntersecting || loading || remaining <= 0) return;
+                        loading = true;
 
-                        isLoading = true;
-                        loadingText.classList.remove("hidden");
-
-                        // Simulate brief loading delay for feel
-                        await new Promise((r) => setTimeout(r, 300));
-
-                        const toShow = cards.length - visibleCount;
-                        const end = Math.min(toShow + BATCH, cards.length);
-                        for (let i = toShow; i < end; i++) {
+                        const start = cards.length - remaining;
+                        const end = Math.min(start + BATCH, cards.length);
+                        for (let i = start; i < end; i++) {
+                            cards[i].style.setProperty("--enter-i", String(i - start));
+                            cards[i].classList.add("card-enter");
                             cards[i].classList.remove("hidden-post");
-                            // Re-initialize progressive images on newly revealed cards
                             initThoughtImages(cards[i]);
                         }
-                        visibleCount = cards.length - end;
+                        remaining = cards.length - end;
 
-                        loadingText.classList.add("hidden");
-
-                        if (visibleCount <= 0) {
+                        if (remaining <= 0) {
                             observer.unobserve(sentinel);
-                            allLoaded.classList.remove("hidden");
+                            feedEnd?.removeAttribute("hidden");
                         }
-
-                        isLoading = false;
+                        loading = false;
                     },
                     { rootMargin: "200px" },
                 );
 
-                if (cards.length > 0) {
-                    observer.observe(sentinel);
-                } else {
-                    allLoaded.classList.remove("hidden");
-                }
+                if (cards.length > 0) observer.observe(sentinel);
+                else feedEnd?.removeAttribute("hidden");
+            }
+
+            initThoughtFeed();
+            if (!window.__thoughtsInit) {
+                window.__thoughtsInit = true;
+                document.addEventListener("astro:page-load", initThoughtFeed);
             }
         </script>
     </body>

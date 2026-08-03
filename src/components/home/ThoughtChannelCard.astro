@@ -1,0 +1,26 @@
+---
+import { render } from "astro:content";
+import FormattedDate from "../FormattedDate.astro";
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+	thought: CollectionEntry<"thoughts">;
+	latest?: boolean;
+}
+
+const { thought, latest = false } = Astro.props;
+const { Content } = await render(thought);
+---
+
+<article class="channel card card--hover">
+	<div class="channel__body">
+		<p class="channel__meta">
+			<span class="channel__label">碎碎念 · </span>
+			{latest && <span class="channel__latest">最新 · </span>}
+			<FormattedDate date={thought.data.pubDate} />
+		</p>
+		<div class="channel__content thought-content">
+			<Content />
+		</div>
+	</div>
+</article>

@@ -9,179 +9,254 @@ import LoadingBar from "../../components/LoadingBar.astro";
 import { ClientRouter } from "astro:transitions";
 import { SITE_DESCRIPTION, SITE_TITLE } from "../../consts";
 
+const BATCH = 6;
+
 const posts = (await getCollection("blog")).sort(
-    (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
+
+function cardImage(post: (typeof posts)[number]) {
+	const src = post.data.cardImage ?? post.data.heroImage;
+	const position = post.data.cardImage
+		? post.data.cardImagePosition
+		: post.data.heroImagePosition;
+	return { src, position };
+}
 ---
 
 <!doctype html>
 <html lang="zh-CN">
-    <head>
-        <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-        <ClientRouter />
-        <LoadingBar />
-        <style>
-            main {
-                max-width: 960px;
-                margin: 0 auto;
-            }
-            ul {
-                display: flex;
-                flex-direction: column;
-                gap: 1.75rem;
-                list-style-type: none;
-                margin: 0;
-                padding: 0;
-            }
-            .post-card {
-                display: flex;
-                gap: 1.5rem;
-                text-decoration: none;
-                padding: 22px 28px;
-            }
-            .post-image {
-                flex-shrink: 0;
-                width: 240px;
-                height: 140px;
-                object-fit: cover;
-                border: 1px solid var(--semi-accent-color);
-            }
-            .post-body {
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                min-width: 0;
-                flex: 1;
-            }
-            .post-title {
-                margin: 0 0 0.35em 0;
-                font-size: 1.25em;
-                color: var(--normal-text-color);
-                line-height: 1.3;
-            }
-            .post-desc {
-                margin: 0 0 0.5em 0;
-                color: var(--semi-accent-color);
-                font-size: 0.95em;
-                line-height: 1.5;
-            }
-            .post-date {
-                margin: 0;
-                color: var(--semi-accent-color);
-                font-size: 0.85em;
-            }
-            @media (max-width: 640px) {
-                .post-card {
-                    flex-direction: column;
-                    gap: 0.75rem;
-                    padding: 16px 18px;
-                }
-                .post-image {
-                    width: 100%;
-                    height: auto;
-                    aspect-ratio: 16 / 9;
-                    order: -1;
-                }
-            }
+	<head>
+		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+		<ClientRouter />
+		<LoadingBar />
+		<style>
+			main {
+				max-width: 960px;
+				margin: 0 auto;
+			}
+			ul {
+				display: flex;
+				flex-direction: column;
+				gap: 1.75rem;
+				list-style-type: none;
+				margin: 0;
+				padding: 0;
+			}
+			.post-card {
+				display: flex;
+				gap: 1.5rem;
+				text-decoration: none;
+				padding: 22px 28px;
+			}
+			.post-image {
+				flex-shrink: 0;
+				width: 240px;
+				height: 140px;
+				object-fit: cover;
+				border: 1px solid var(--semi-accent-color);
+			}
+			.post-body {
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				min-width: 0;
+				flex: 1;
+			}
+			.post-title {
+				margin: 0 0 0.35em 0;
+				font-size: 1.25em;
+				color: var(--normal-text-color);
+				line-height: 1.3;
+			}
+			.post-desc {
+				margin: 0 0 0.5em 0;
+				color: var(--semi-accent-color);
+				font-size: 0.95em;
+				line-height: 1.5;
+			}
+			.post-date {
+				margin: 0;
+				color: var(--semi-accent-color);
+				font-size: 0.85em;
+			}
+			.hidden-post {
+				display: none;
+			}
+			#sentinel {
+				height: 1px;
+				width: 100%;
+			}
+			.feed-end {
+				text-align: center;
+				padding: 1.5em 0;
+				color: var(--semi-accent-color);
+				font-size: 0.9em;
+			}
+			.feed-end[hidden] {
+				display: none;
+			}
+			@media (max-width: 640px) {
+				.post-card {
+					flex-direction: column;
+					gap: 0.75rem;
+					padding: 16px 18px;
+				}
+				.post-image {
+					width: 100%;
+					height: auto;
+					aspect-ratio: 16 / 9;
+					order: -1;
+				}
+			}
+			@media (max-width: 480px) {
+				ul {
+					gap: 1.25rem;
+				}
+				.post-card {
+					padding: 14px 14px;
+				}
+				.post-title {
+					font-size: 1.1em;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<div class="page-header">
+				<h1>文章</h1>
+				<p>长文放置于此</p>
+			</div>
 
-            @media (max-width: 480px) {
-                ul {
-                    gap: 1.25rem;
-                }
-                .post-card {
-                    padding: 14px 14px;
-                }
-                .post-title {
-                    font-size: 1.1em;
-                }
-            }
-        </style>
-    </head>
-    <body>
-        <Header />
-        <main>
-            <div class="page-header">
-                <h1>文章</h1>
-                <p>长文放置于此</p>
-            </div>
+			<section>
+				<ul id="blog-feed">
+					{
+						posts.map((post, i) => {
+							const { src, position } = cardImage(post);
+							return (
+								<li class:list={[i >= BATCH && "hidden-post"]}>
+									<a
+										href={`/blog/${post.id}/`}
+										class="post-card card card--hover"
+									>
+										<div class="post-body">
+											<h4 class="post-title">{post.data.title}</h4>
+											{post.data.description && (
+												<p class="post-desc line-clamp-3">
+													{post.data.description}
+												</p>
+											)}
+											<p class="post-date">
+												<FormattedDate date={post.data.pubDate} />
+											</p>
+										</div>
+										{src && (
+											<Image
+												class="post-image"
+												width={240}
+												height={140}
+												src={src}
+												alt=""
+												lqip="base64"
+												lqipSize={10}
+												decoding="sync"
+												style={{ objectPosition: position }}
+											/>
+										)}
+									</a>
+								</li>
+							);
+						})
+					}
+				</ul>
+			</section>
 
-            <section>
-                <ul>
-                    {
-                        posts.map((post) => (
-                            <li>
-                                <a
-                                    href={`/blog/${post.id}/`}
-                                    class="post-card card card--hover"
-                                >
-                                    <div class="post-body">
-                                        <h4 class="post-title">
-                                            {post.data.title}
-                                        </h4>
-                                        {post.data.description && (
-                                            <p class="post-desc line-clamp-3">
-                                                {post.data.description}
-                                            </p>
-                                        )}
-                                        <p class="post-date">
-                                            <FormattedDate
-                                                date={post.data.pubDate}
-                                            />
-                                        </p>
-                                    </div>
-                                    {(() => {
-                                                                const cardImgSrc = post.data.cardImage ?? post.data.heroImage;
-                                                                const cardImgPos = post.data.cardImage
-                                                                    ? post.data.cardImagePosition
-                                                                    : post.data.heroImagePosition;
-                                                                return cardImgSrc && (
-                                                                    <Image
-                                                                        class="post-image"
-                                                                        width={240}
-                                                                        height={140}
-                                                                        src={cardImgSrc}
-                                                                        alt=""
-                                                                        lqip="base64"
-                                                                        lqipSize={10}
-                                                                        decoding="sync"
-                                                                        style={{ objectPosition: cardImgPos }}
-                                                                    />
-                                                                );
-                                                            })()}
-                                </a>
-                            </li>
-                        ))
-                    }
-                </ul>
-            </section>
-        </main>
-                <Footer />
-                <script>
-                    // astro-lqip list card images: hidden until loaded,
-                    // so the LQIP placeholder is visible during slow-network loading.
-                    function init() {
-                        document.querySelectorAll('[data-astro-lqip]').forEach(wrapper => {
-                            const img = wrapper.querySelector('img');
-                            if (!img || img.dataset.lqipInit) return;
-                            img.dataset.lqipInit = '1';
-                            if (img.complete) {
-                                // Cached image: hide blur ::after and skip opacity transition
-                                wrapper.classList.add('lqip-cached');
-                                img.style.transition = 'none';
-                                img.classList.add('loaded');
-                                img.offsetHeight;
-                                img.style.transition = '';
-                            } else {
-                                img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
-                                img.addEventListener('error', () => img.classList.add('loaded'), { once: true });
-                            }
-                        });
-                    }
-                    init();
-                    if (!window.__blogIndexImgInit) {
-                        window.__blogIndexImgInit = true;
-                        document.addEventListener('astro:page-load', init);
-                    }
-                </script>
-            </body>
-        </html>
+			<div id="sentinel"></div>
+			{
+				posts.length > BATCH && (
+					<p id="feed-end" class="feed-end" hidden>— 已经到底啦 —</p>
+				)
+			}
+		</main>
+		<Footer />
+		<script>
+			declare global {
+				interface Window {
+					__blogIndexImgInit?: boolean;
+				}
+			}
+
+			function initBlogImages(root?: ParentNode) {
+				(root || document).querySelectorAll("[data-astro-lqip]").forEach((wrapper) => {
+					const img = wrapper.querySelector("img");
+					if (!img || img.dataset.lqipInit) return;
+					img.dataset.lqipInit = "1";
+					if (img.complete) {
+						wrapper.classList.add("lqip-cached");
+						img.style.transition = "none";
+						img.classList.add("loaded");
+						img.offsetHeight;
+						img.style.transition = "";
+					} else {
+						img.addEventListener("load", () => img.classList.add("loaded"), {
+							once: true,
+						});
+						img.addEventListener("error", () => img.classList.add("loaded"), {
+							once: true,
+						});
+					}
+				});
+			}
+
+			function initBlogFeed() {
+				initBlogImages();
+
+				const BATCH = 6;
+				const feed = document.getElementById("blog-feed");
+				const sentinel = document.getElementById("sentinel");
+				const feedEnd = document.getElementById("feed-end");
+				if (!feed || !sentinel || feed.dataset.bound) return;
+				feed.dataset.bound = "1";
+
+				const cards = feed.querySelectorAll<HTMLElement>("li.hidden-post");
+				let remaining = cards.length;
+				let loading = false;
+
+				const observer = new IntersectionObserver(
+					(entries) => {
+						if (!entries[0].isIntersecting || loading || remaining <= 0) return;
+						loading = true;
+
+						const start = cards.length - remaining;
+						const end = Math.min(start + BATCH, cards.length);
+						for (let i = start; i < end; i++) {
+							cards[i].style.setProperty("--enter-i", String(i - start));
+							cards[i].classList.add("card-enter");
+							cards[i].classList.remove("hidden-post");
+							initBlogImages(cards[i]);
+						}
+						remaining = cards.length - end;
+
+						if (remaining <= 0) {
+							observer.unobserve(sentinel);
+							feedEnd?.removeAttribute("hidden");
+						}
+						loading = false;
+					},
+					{ rootMargin: "200px" },
+				);
+
+				if (cards.length > 0) observer.observe(sentinel);
+				else feedEnd?.removeAttribute("hidden");
+			}
+
+			initBlogFeed();
+			if (!window.__blogIndexImgInit) {
+				window.__blogIndexImgInit = true;
+				document.addEventListener("astro:page-load", initBlogFeed);
+			}
+		</script>
+	</body>
+</html>

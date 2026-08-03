@@ -1,126 +1,228 @@
 ---
-import { Image } from "astro-lqip/components";
-import { render } from "astro:content";
-import FormattedDate from "../FormattedDate.astro";
+import ThoughtChannelCard from "./ThoughtChannelCard.astro";
+import BlogChannelCard from "./BlogChannelCard.astro";
 import type { CollectionEntry } from "astro:content";
 
 interface Props {
-	thoughts: CollectionEntry<"thoughts">[];
-	blogs: CollectionEntry<"blog">[];
+    thought: CollectionEntry<"thoughts"> | undefined;
+    blog: CollectionEntry<"blog"> | undefined;
+    hasMore: boolean;
 }
 
-const { thoughts, blogs } = Astro.props;
-
-const renderedThoughts = await Promise.all(
-	thoughts.map(async (thought) => {
-		const { Content } = await render(thought);
-		return { thought, Content };
-	}),
-);
-
-function blogCardImage(blog: CollectionEntry<"blog">) {
-	const src = blog.data.cardImage ?? blog.data.heroImage;
-	const position = blog.data.cardImage
-		? blog.data.cardImagePosition
-		: blog.data.heroImagePosition;
-	return { src, position };
-}
+const { thought, blog, hasMore } = Astro.props;
 ---
 
 {/* Mobile-only: list-page entries above content */}
 <div class="home-entries">
-	<a class="entry-card card card--hover" href="/thoughts">
-		<strong>碎碎念</strong>
-		<span>日常与碎片记录</span>
-	</a>
-	<a class="entry-card card card--hover" href="/blog">
-		<strong>文章</strong>
-		<span>阅读一些长文</span>
-	</a>
+    <a class="entry-card card card--hover" href="/thoughts">
+        <strong>碎碎念</strong>
+        <span>日常与碎片记录</span>
+    </a>
+    <a class="entry-card card card--hover" href="/blog">
+        <strong>文章</strong>
+        <span>阅读一些长文</span>
+    </a>
 </div>
 
-<section class="home-channels">
-	<div class="channel-col">
-		<header class="channel-col__head">
-			<a href="/thoughts">碎碎念</a>
-			<a class="channel-col__more" href="/thoughts">查看全部 →</a>
-		</header>
-		{
-			renderedThoughts.map(({ thought, Content }, i) => (
-				<article class="channel card card--hover">
-					<div class="channel__body">
-						<p class="channel__meta">
-							<span class="channel__label">碎碎念 · </span>
-							{i === 0 && (
-								<span class="channel__latest">最新 · </span>
-							)}
-							<FormattedDate date={thought.data.pubDate} />
-						</p>
-						<div class="channel__content thought-content">
-							<Content />
-						</div>
-					</div>
-				</article>
-			))
-		}
-		<footer class="channel-col__foot">
-			<a href="/thoughts">查看更多碎碎念 →</a>
-		</footer>
-	</div>
+<section
+    class="home-channels"
+    data-home-channels
+    data-has-more={hasMore ? "1" : "0"}
+>
+    <div class="channel-col" data-channel="thoughts">
+        <header class="channel-col__head">
+            <a href="/thoughts">碎碎念</a>
+        </header>
+        {thought && <ThoughtChannelCard thought={thought} latest />}
+        <div data-channel-more></div>
+        {
+            hasMore && (
+                <button
+                    type="button"
+                    class="btn-ghost channel-expand"
+                    data-channel-expand
+                    hidden
+                    aria-label="点击展开更多内容"
+                >
+                    点击展开更多
+                </button>
+            )
+        }
+        <footer class="channel-col__foot">
+            <a href="/thoughts">查看更多碎碎念 →</a>
+        </footer>
+    </div>
 
-	<div class="channel-col">
-		<header class="channel-col__head">
-			<a href="/blog">文章</a>
-			<a class="channel-col__more" href="/blog">查看全部 →</a>
-		</header>
-		{
-			blogs.map((blog, i) => {
-				const { src: cardImgSrc, position: cardImgPos } =
-					blogCardImage(blog);
-				return (
-					<article class="channel card card--hover">
-						<div class="channel__body">
-							<p class="channel__meta">
-								<span class="channel__label">文章 · </span>
-								{i === 0 && (
-									<span class="channel__latest">最新 · </span>
-								)}
-								<FormattedDate date={blog.data.pubDate} />
-							</p>
-							<a
-								href={`/blog/${blog.id}/`}
-								class="channel__title"
-							>
-								{blog.data.title}
-							</a>
-							{blog.data.description && (
-								<p class="channel__desc line-clamp-3">
-									{blog.data.description}
-								</p>
-							)}
-							{cardImgSrc && (
-								<Image
-									class="channel__image"
-									src={cardImgSrc}
-									width={480}
-									height={270}
-									alt=""
-									lqip="base64"
-									lqipSize={10}
-									decoding="sync"
-									style={{ objectPosition: cardImgPos }}
-								/>
-							)}
-							<p class="channel__links">
-								<a href={`/blog/${blog.id}/`}>阅读全文 →</a>
-							</p>
-						</div>
-					</article>
-				);
-			})
-		}
-		<footer class="channel-col__foot">
-			<a href="/blog">查看更多文章 →</a>
-		</footer>
-	</div>
+    <div class="channel-col" data-channel="blogs">
+        <header class="channel-col__head">
+            <a href="/blog">文章</a>
+        </header>
+        {blog && <BlogChannelCard blog={blog} latest />}
+        <div data-channel-more></div>
+        {
+            hasMore && (
+                <button
+                    type="button"
+                    class="btn-ghost channel-expand"
+                    data-channel-expand
+                    hidden
+                    aria-label="点击展开更多内容"
+                >
+                    点击展开更多
+                </button>
+            )
+        }
+        <footer class="channel-col__foot">
+            <a href="/blog">查看更多文章 →</a>
+        </footer>
+    </div>
 </section>
+
+<script>
+    declare global {
+        interface Window {
+            __homeChannelsInit?: boolean;
+        }
+    }
+
+    const DESKTOP_MQ = "(min-width: 801px)";
+    const MIN_FILL = 48;
+    const MORE_URL = "/home-more/";
+
+    function markEnter(el: HTMLElement, i: number) {
+        el.classList.add("card-enter");
+        el.style.setProperty("--enter-i", String(i));
+    }
+
+    function fillSlot(slot: Element | null, source: Element | null) {
+        if (!slot || !source) return;
+        slot.replaceChildren(
+            ...[...source.children].map((n, i) => {
+                const el = document.importNode(n, true) as HTMLElement;
+                markEnter(el, i);
+                return el;
+            }),
+        );
+    }
+
+    function hideExpands(root: HTMLElement) {
+        root.querySelectorAll<HTMLButtonElement>(
+            "[data-channel-expand]",
+        ).forEach((btn) => {
+            btn.hidden = true;
+            btn.style.minHeight = "";
+            btn.disabled = false;
+        });
+    }
+
+    function syncChannelExpand(root: HTMLElement) {
+        if (
+            root.dataset.hasMore !== "1" ||
+            root.classList.contains("is-expanded") ||
+            !window.matchMedia(DESKTOP_MQ).matches
+        ) {
+            hideExpands(root);
+            return;
+        }
+
+        hideExpands(root);
+
+        const cols = [...root.querySelectorAll<HTMLElement>("[data-channel]")];
+        if (cols.length !== 2) return;
+
+        const [h0, h1] = cols.map((c) => c.getBoundingClientRect().height);
+        const shortCol = cols[h0 <= h1 ? 0 : 1];
+        const expand = shortCol.querySelector<HTMLButtonElement>(
+            "[data-channel-expand]",
+        );
+        if (!expand) return;
+
+        const gap = parseFloat(getComputedStyle(shortCol).gap) || 0;
+        const fill = Math.abs(h0 - h1) - gap;
+
+        expand.hidden = false;
+        if (fill >= MIN_FILL) expand.style.minHeight = `${fill}px`;
+    }
+
+    async function expandChannels(root: HTMLElement, btn: HTMLButtonElement) {
+        if (root.classList.contains("is-expanded") || root.dataset.loading)
+            return;
+
+        root.dataset.loading = "1";
+        btn.disabled = true;
+        const prev = btn.textContent;
+        btn.textContent = "加载中…";
+
+        try {
+            const res = await fetch(MORE_URL, { credentials: "same-origin" });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const doc = new DOMParser().parseFromString(
+                await res.text(),
+                "text/html",
+            );
+
+            fillSlot(
+                root.querySelector(
+                    '[data-channel="thoughts"] [data-channel-more]',
+                ),
+                doc.querySelector("[data-more-thoughts]"),
+            );
+            fillSlot(
+                root.querySelector(
+                    '[data-channel="blogs"] [data-channel-more]',
+                ),
+                doc.querySelector("[data-more-blogs]"),
+            );
+
+            root.classList.add("is-expanded");
+            hideExpands(root);
+            document.dispatchEvent(new Event("home:content"));
+        } catch {
+            btn.textContent = prev || "点击展开更多";
+            btn.disabled = false;
+            syncChannelExpand(root);
+        } finally {
+            delete root.dataset.loading;
+        }
+    }
+
+    function initHomeChannels() {
+        const root = document.querySelector<HTMLElement>(
+            "[data-home-channels]",
+        );
+        if (!root) return;
+
+        syncChannelExpand(root);
+        if (root.dataset.expandBound) return;
+        root.dataset.expandBound = "1";
+
+        root.addEventListener("click", (e) => {
+            const btn = (e.target as HTMLElement).closest(
+                "[data-channel-expand]",
+            ) as HTMLButtonElement | null;
+            if (!btn || !root.contains(btn)) return;
+            void expandChannels(root, btn);
+        });
+
+        window
+            .matchMedia(DESKTOP_MQ)
+            .addEventListener("change", () => syncChannelExpand(root));
+
+        const ro = new ResizeObserver(() => {
+            if (!root.classList.contains("is-expanded"))
+                syncChannelExpand(root);
+        });
+        root.querySelectorAll<HTMLElement>("[data-channel] > .channel").forEach(
+            (el) => ro.observe(el),
+        );
+        window.addEventListener("load", () => syncChannelExpand(root), {
+            once: true,
+        });
+    }
+
+    initHomeChannels();
+    if (!window.__homeChannelsInit) {
+        window.__homeChannelsInit = true;
+        document.addEventListener("astro:page-load", initHomeChannels);
+    }
+</script>
