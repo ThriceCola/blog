@@ -59,36 +59,54 @@ main.home-main {
 	padding-bottom: 2em;
 }
 
-.channel {
+.channel-col {
 	display: flex;
 	flex-direction: column;
-	padding: 0;
-	overflow: hidden;
+	gap: 1em;
+	min-width: 0;
 }
-.channel__head {
+.channel-col__head {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	gap: 0.75em;
-	padding: 16px 22px;
-	border-bottom: 1px dashed var(--semi-accent-color);
+	padding: 0 0.15em;
 }
-.channel__head > a:first-child {
+.channel-col__head > a:first-child {
 	text-decoration: none;
 	color: var(--normal-text-color);
 	font-weight: 600;
 	font-size: 1.05em;
 }
-.channel__head > a:first-child:hover {
+.channel-col__head > a:first-child:hover {
 	color: var(--accent-color);
 }
-.channel__more {
+.channel-col__more {
 	font-size: 0.85em;
 	color: var(--accent-color);
 	text-decoration: none;
 }
-.channel__more:hover {
+.channel-col__more:hover {
 	opacity: 0.75;
+}
+.channel-col__foot {
+	display: none;
+	padding: 0.25em 0.15em 0;
+}
+.channel-col__foot a {
+	font-size: 0.9em;
+	color: var(--accent-color);
+	text-decoration: none;
+}
+.channel-col__foot a:hover {
+	opacity: 0.75;
+}
+
+.channel {
+	display: flex;
+	flex-direction: column;
+	padding: 0;
+	overflow: hidden;
 }
 .channel__body {
 	padding: 20px 22px 22px;
@@ -155,19 +173,6 @@ a.channel__title:visited {
 .channel__links a:hover {
 	opacity: 0.75;
 }
-.channel__foot {
-	display: none;
-	padding: 14px 22px 18px;
-	border-top: 1px dashed var(--semi-accent-color);
-}
-.channel__foot a {
-	font-size: 0.9em;
-	color: var(--accent-color);
-	text-decoration: none;
-}
-.channel__foot a:hover {
-	opacity: 0.75;
-}
 
 .thought-content img {
 	opacity: 0;
@@ -186,17 +191,17 @@ a.channel__title:visited {
 		grid-template-columns: 1fr;
 		gap: 1.5em;
 	}
-	.channel__head {
+	.channel-col__head {
 		display: none;
+	}
+	.channel-col__foot {
+		display: block;
 	}
 	.channel__label {
 		display: inline;
 	}
 	.channel__latest {
 		display: none;
-	}
-	.channel__foot {
-		display: block;
 	}
 }
 
@@ -220,8 +225,7 @@ a.channel__title:visited {
 	.entry-card span {
 		font-size: 0.85em;
 	}
-	.channel__body,
-	.channel__foot {
+	.channel__body {
 		padding-left: 16px;
 		padding-right: 16px;
 	}

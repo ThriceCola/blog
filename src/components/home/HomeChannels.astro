@@ -1,18 +1,30 @@
 ---
 import { Image } from "astro-lqip/components";
+import { render } from "astro:content";
 import FormattedDate from "../FormattedDate.astro";
 import type { CollectionEntry } from "astro:content";
 
 interface Props {
-	thought: CollectionEntry<"thoughts">;
-	blog: CollectionEntry<"blog">;
+	thoughts: CollectionEntry<"thoughts">[];
+	blogs: CollectionEntry<"blog">[];
 }
 
-const { thought, blog } = Astro.props;
-const cardImgSrc = blog.data.cardImage ?? blog.data.heroImage;
-const cardImgPos = blog.data.cardImage
-	? blog.data.cardImagePosition
-	: blog.data.heroImagePosition;
+const { thoughts, blogs } = Astro.props;
+
+const renderedThoughts = await Promise.all(
+	thoughts.map(async (thought) => {
+		const { Content } = await render(thought);
+		return { thought, Content };
+	}),
+);
+
+function blogCardImage(blog: CollectionEntry<"blog">) {
+	const src = blog.data.cardImage ?? blog.data.heroImage;
+	const position = blog.data.cardImage
+		? blog.data.cardImagePosition
+		: blog.data.heroImagePosition;
+	return { src, position };
+}
 ---
 
 {/* Mobile-only: list-page entries above content */}
@@ -28,68 +40,87 @@ const cardImgPos = blog.data.cardImage
 </div>
 
 <section class="home-channels">
-	<article class="channel card card--hover">
-		<header class="channel__head">
+	<div class="channel-col">
+		<header class="channel-col__head">
 			<a href="/thoughts">碎碎念</a>
-			<a class="channel__more" href="/thoughts">查看全部 →</a>
+			<a class="channel-col__more" href="/thoughts">查看全部 →</a>
 		</header>
-		<div class="channel__body">
-			<p class="channel__meta">
-				<span class="channel__label">碎碎念 · </span>
-				<span class="channel__latest">最新 · </span>
-				<FormattedDate date={thought.data.pubDate} />
-			</p>
-			<div class="channel__content thought-content">
-				<slot name="thought" />
-			</div>
-		</div>
-		<footer class="channel__foot">
+		{
+			renderedThoughts.map(({ thought, Content }, i) => (
+				<article class="channel card card--hover">
+					<div class="channel__body">
+						<p class="channel__meta">
+							<span class="channel__label">碎碎念 · </span>
+							{i === 0 && (
+								<span class="channel__latest">最新 · </span>
+							)}
+							<FormattedDate date={thought.data.pubDate} />
+						</p>
+						<div class="channel__content thought-content">
+							<Content />
+						</div>
+					</div>
+				</article>
+			))
+		}
+		<footer class="channel-col__foot">
 			<a href="/thoughts">查看更多碎碎念 →</a>
 		</footer>
-	</article>
+	</div>
 
-	<article class="channel card card--hover">
-		<header class="channel__head">
+	<div class="channel-col">
+		<header class="channel-col__head">
 			<a href="/blog">文章</a>
-			<a class="channel__more" href="/blog">查看全部 →</a>
+			<a class="channel-col__more" href="/blog">查看全部 →</a>
 		</header>
-		<div class="channel__body">
-			<p class="channel__meta">
-				<span class="channel__label">文章 · </span>
-				<span class="channel__latest">最新 · </span>
-				<FormattedDate date={blog.data.pubDate} />
-			</p>
-			<a href={`/blog/${blog.id}/`} class="channel__title">
-				{blog.data.title}
-			</a>
-			{
-				blog.data.description && (
-					<p class="channel__desc line-clamp-3">
-						{blog.data.description}
-					</p>
-				)
-			}
-			{
-				cardImgSrc && (
-					<Image
-						class="channel__image"
-						src={cardImgSrc}
-						width={480}
-						height={270}
-						alt=""
-						lqip="base64"
-						lqipSize={10}
-						decoding="sync"
-						style={{ objectPosition: cardImgPos }}
-					/>
-				)
-			}
-			<p class="channel__links">
-				<a href={`/blog/${blog.id}/`}>阅读全文 →</a>
-			</p>
-		</div>
-		<footer class="channel__foot">
+		{
+			blogs.map((blog, i) => {
+				const { src: cardImgSrc, position: cardImgPos } =
+					blogCardImage(blog);
+				return (
+					<article class="channel card card--hover">
+						<div class="channel__body">
+							<p class="channel__meta">
+								<span class="channel__label">文章 · </span>
+								{i === 0 && (
+									<span class="channel__latest">最新 · </span>
+								)}
+								<FormattedDate date={blog.data.pubDate} />
+							</p>
+							<a
+								href={`/blog/${blog.id}/`}
+								class="channel__title"
+							>
+								{blog.data.title}
+							</a>
+							{blog.data.description && (
+								<p class="channel__desc line-clamp-3">
+									{blog.data.description}
+								</p>
+							)}
+							{cardImgSrc && (
+								<Image
+									class="channel__image"
+									src={cardImgSrc}
+									width={480}
+									height={270}
+									alt=""
+									lqip="base64"
+									lqipSize={10}
+									decoding="sync"
+									style={{ objectPosition: cardImgPos }}
+								/>
+							)}
+							<p class="channel__links">
+								<a href={`/blog/${blog.id}/`}>阅读全文 →</a>
+							</p>
+						</div>
+					</article>
+				);
+			})
+		}
+		<footer class="channel-col__foot">
 			<a href="/blog">查看更多文章 →</a>
 		</footer>
-	</article>
+	</div>
 </section>
