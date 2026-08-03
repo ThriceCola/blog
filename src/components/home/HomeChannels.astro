@@ -29,53 +29,64 @@ const { thought, blog, hasMore } = Astro.props;
     data-home-channels
     data-has-more={hasMore ? "1" : "0"}
 >
-    <div class="channel-col" data-channel="thoughts">
-        <header class="channel-col__head">
-            <a href="/thoughts">碎碎念</a>
-        </header>
-        {thought && <ThoughtChannelCard thought={thought} latest />}
-        <div data-channel-more></div>
-        {
-            hasMore && (
-                <button
-                    type="button"
-                    class="btn-ghost channel-expand"
-                    data-channel-expand
-                    hidden
-                    aria-label="点击展开更多内容"
-                >
-                    点击展开更多
-                </button>
-            )
-        }
-        <footer class="channel-col__foot">
-            <a href="/thoughts">查看更多碎碎念 →</a>
-        </footer>
-    </div>
+	<div class="channel-col" data-channel="thoughts">
+		<header class="channel-col__head">
+			<a href="/thoughts">碎碎念</a>
+		</header>
+		{thought && <ThoughtChannelCard thought={thought} latest />}
+		<div data-channel-more></div>
+		{
+			hasMore && (
+				<button
+					type="button"
+					class="btn-ghost channel-expand"
+					data-channel-expand
+					hidden
+					aria-label="点击展开更多内容"
+				>
+					点击展开更多
+				</button>
+			)
+		}
+		<footer class="channel-col__foot">
+			<a href="/thoughts">查看更多碎碎念 →</a>
+		</footer>
+	</div>
 
-    <div class="channel-col" data-channel="blogs">
-        <header class="channel-col__head">
-            <a href="/blog">文章</a>
-        </header>
-        {blog && <BlogChannelCard blog={blog} latest />}
-        <div data-channel-more></div>
-        {
-            hasMore && (
-                <button
-                    type="button"
-                    class="btn-ghost channel-expand"
-                    data-channel-expand
-                    hidden
-                    aria-label="点击展开更多内容"
-                >
-                    点击展开更多
-                </button>
-            )
-        }
-        <footer class="channel-col__foot">
-            <a href="/blog">查看更多文章 →</a>
-        </footer>
-    </div>
+	<div class="channel-col" data-channel="blogs">
+		<header class="channel-col__head">
+			<a href="/blog">文章</a>
+		</header>
+		{blog && <BlogChannelCard blog={blog} latest />}
+		<div data-channel-more></div>
+		{
+			hasMore && (
+				<button
+					type="button"
+					class="btn-ghost channel-expand"
+					data-channel-expand
+					hidden
+					aria-label="点击展开更多内容"
+				>
+					点击展开更多
+				</button>
+			)
+		}
+		<footer class="channel-col__foot">
+			<a href="/blog">查看更多文章 →</a>
+		</footer>
+	</div>
+
+	<div class="channel-guides" data-channel-guides hidden>
+		<a class="entry-card card card--hover" href="/thoughts">
+			<strong>碎碎念</strong>
+			<span>日常与碎片记录</span>
+		</a>
+		<a class="entry-card card card--hover" href="/blog">
+			<strong>文章</strong>
+			<span>阅读一些长文</span>
+		</a>
+	</div>
 </section>
 
 <script>
@@ -105,120 +116,200 @@ const { thought, blog, hasMore } = Astro.props;
         );
     }
 
-    function hideExpands(root: HTMLElement) {
-        root.querySelectorAll<HTMLButtonElement>(
-            "[data-channel-expand]",
-        ).forEach((btn) => {
-            btn.hidden = true;
-            btn.style.minHeight = "";
-            btn.disabled = false;
-        });
-    }
+	function hideExpands(root: HTMLElement) {
+		root.querySelectorAll<HTMLButtonElement>(
+			"[data-channel-expand]",
+		).forEach((btn) => {
+			btn.hidden = true;
+			btn.style.minHeight = "";
+			btn.disabled = false;
+		});
+	}
 
-    function syncChannelExpand(root: HTMLElement) {
-        if (
-            root.dataset.hasMore !== "1" ||
-            root.classList.contains("is-expanded") ||
-            !window.matchMedia(DESKTOP_MQ).matches
-        ) {
-            hideExpands(root);
-            return;
-        }
+	function hideGuides(root: HTMLElement) {
+		const guides = root.querySelector<HTMLElement>("[data-channel-guides]");
+		if (!guides) return;
+		guides.hidden = true;
+		guides.style.height = "";
+		guides.style.minHeight = "";
+		root.appendChild(guides);
+	}
 
-        hideExpands(root);
+	function colContentHeight(col: HTMLElement) {
+		let top = Infinity;
+		let bottom = -Infinity;
+		for (const child of col.children) {
+			const el = child as HTMLElement;
+			if (
+				el.matches(
+					"[data-channel-expand], [data-channel-guides], [data-channel-guide]",
+				)
+			)
+				continue;
+			if (el.hidden) continue;
+			const style = getComputedStyle(el);
+			if (style.display === "none") continue;
+			if (el.matches("[data-channel-more]") && !el.childElementCount)
+				continue;
+			const r = el.getBoundingClientRect();
+			if (r.height === 0) continue;
+			top = Math.min(top, r.top);
+			bottom = Math.max(bottom, r.bottom);
+		}
+		return Number.isFinite(top) ? bottom - top : 0;
+	}
 
-        const cols = [...root.querySelectorAll<HTMLElement>("[data-channel]")];
-        if (cols.length !== 2) return;
+	function shortColOf(root: HTMLElement) {
+		const cols = [...root.querySelectorAll<HTMLElement>("[data-channel]")];
+		if (cols.length !== 2) return null;
+		const [h0, h1] = cols.map(colContentHeight);
+		const shortCol = cols[h0 <= h1 ? 0 : 1];
+		const gap = parseFloat(getComputedStyle(shortCol).gap) || 0;
+		return { shortCol, fill: Math.abs(h0 - h1) - gap };
+	}
 
-        const [h0, h1] = cols.map((c) => c.getBoundingClientRect().height);
-        const shortCol = cols[h0 <= h1 ? 0 : 1];
-        const expand = shortCol.querySelector<HTMLButtonElement>(
-            "[data-channel-expand]",
-        );
-        if (!expand) return;
+	function syncChannelExpand(root: HTMLElement) {
+		hideGuides(root);
 
-        const gap = parseFloat(getComputedStyle(shortCol).gap) || 0;
-        const fill = Math.abs(h0 - h1) - gap;
+		if (
+			root.dataset.hasMore !== "1" ||
+			root.classList.contains("is-expanded") ||
+			!window.matchMedia(DESKTOP_MQ).matches
+		) {
+			hideExpands(root);
+			return;
+		}
 
-        expand.hidden = false;
-        if (fill >= MIN_FILL) expand.style.minHeight = `${fill}px`;
-    }
+		hideExpands(root);
+		const result = shortColOf(root);
+		if (!result) return;
 
-    async function expandChannels(root: HTMLElement, btn: HTMLButtonElement) {
-        if (root.classList.contains("is-expanded") || root.dataset.loading)
-            return;
+		const expand = result.shortCol.querySelector<HTMLButtonElement>(
+			"[data-channel-expand]",
+		);
+		if (!expand) return;
 
-        root.dataset.loading = "1";
-        btn.disabled = true;
-        const prev = btn.textContent;
-        btn.textContent = "加载中…";
+		expand.hidden = false;
+		if (result.fill >= MIN_FILL) expand.style.minHeight = `${result.fill}px`;
+	}
 
-        try {
-            const res = await fetch(MORE_URL, { credentials: "same-origin" });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const doc = new DOMParser().parseFromString(
-                await res.text(),
-                "text/html",
-            );
+	function syncChannelGuide(root: HTMLElement) {
+		hideExpands(root);
 
-            fillSlot(
-                root.querySelector(
-                    '[data-channel="thoughts"] [data-channel-more]',
-                ),
-                doc.querySelector("[data-more-thoughts]"),
-            );
-            fillSlot(
-                root.querySelector(
-                    '[data-channel="blogs"] [data-channel-more]',
-                ),
-                doc.querySelector("[data-more-blogs]"),
-            );
+		const guides = root.querySelector<HTMLElement>("[data-channel-guides]");
+		if (!guides) return;
 
-            root.classList.add("is-expanded");
-            hideExpands(root);
-            document.dispatchEvent(new Event("home:content"));
-        } catch {
-            btn.textContent = prev || "点击展开更多";
-            btn.disabled = false;
-            syncChannelExpand(root);
-        } finally {
-            delete root.dataset.loading;
-        }
-    }
+		if (
+			!root.classList.contains("is-expanded") ||
+			!window.matchMedia(DESKTOP_MQ).matches
+		) {
+			hideGuides(root);
+			return;
+		}
 
-    function initHomeChannels() {
-        const root = document.querySelector<HTMLElement>(
-            "[data-home-channels]",
-        );
-        if (!root) return;
+		// Park guides outside columns so measurement ignores them
+		guides.hidden = true;
+		guides.style.height = "";
+		guides.style.minHeight = "";
+		root.appendChild(guides);
 
-        syncChannelExpand(root);
-        if (root.dataset.expandBound) return;
-        root.dataset.expandBound = "1";
+		const result = shortColOf(root);
+		if (!result || result.fill < MIN_FILL) return;
 
-        root.addEventListener("click", (e) => {
-            const btn = (e.target as HTMLElement).closest(
-                "[data-channel-expand]",
-            ) as HTMLButtonElement | null;
-            if (!btn || !root.contains(btn)) return;
-            void expandChannels(root, btn);
-        });
+		const foot = result.shortCol.querySelector(".channel-col__foot");
+		result.shortCol.insertBefore(guides, foot);
+		guides.hidden = false;
+		guides.style.height = `${result.fill}px`;
+		guides.style.minHeight = `${result.fill}px`;
+		if (!guides.classList.contains("card-enter")) markEnter(guides, 0);
+	}
 
-        window
-            .matchMedia(DESKTOP_MQ)
-            .addEventListener("change", () => syncChannelExpand(root));
+	function syncHomeChannels(root: HTMLElement) {
+		if (root.classList.contains("is-expanded")) syncChannelGuide(root);
+		else syncChannelExpand(root);
+	}
 
-        const ro = new ResizeObserver(() => {
-            if (!root.classList.contains("is-expanded"))
-                syncChannelExpand(root);
-        });
-        root.querySelectorAll<HTMLElement>("[data-channel] > .channel").forEach(
-            (el) => ro.observe(el),
-        );
-        window.addEventListener("load", () => syncChannelExpand(root), {
-            once: true,
-        });
-    }
+	async function expandChannels(
+		root: HTMLElement,
+		btn: HTMLButtonElement,
+		observeCards: () => void,
+	) {
+		if (root.classList.contains("is-expanded") || root.dataset.loading)
+			return;
+
+		root.dataset.loading = "1";
+		btn.disabled = true;
+		const prev = btn.textContent;
+		btn.textContent = "加载中…";
+
+		try {
+			const res = await fetch(MORE_URL, { credentials: "same-origin" });
+			if (!res.ok) throw new Error(`HTTP ${res.status}`);
+			const doc = new DOMParser().parseFromString(
+				await res.text(),
+				"text/html",
+			);
+
+			fillSlot(
+				root.querySelector(
+					'[data-channel="thoughts"] [data-channel-more]',
+				),
+				doc.querySelector("[data-more-thoughts]"),
+			);
+			fillSlot(
+				root.querySelector(
+					'[data-channel="blogs"] [data-channel-more]',
+				),
+				doc.querySelector("[data-more-blogs]"),
+			);
+
+			root.classList.add("is-expanded");
+			hideExpands(root);
+			observeCards();
+			document.dispatchEvent(new Event("home:content"));
+			requestAnimationFrame(() => syncChannelGuide(root));
+		} catch {
+			btn.textContent = prev || "点击展开更多";
+			btn.disabled = false;
+			syncChannelExpand(root);
+		} finally {
+			delete root.dataset.loading;
+		}
+	}
+
+	function initHomeChannels() {
+		const root = document.querySelector<HTMLElement>(
+			"[data-home-channels]",
+		);
+		if (!root) return;
+
+		syncHomeChannels(root);
+		if (root.dataset.expandBound) return;
+		root.dataset.expandBound = "1";
+
+		const ro = new ResizeObserver(() => syncHomeChannels(root));
+		const observeCards = () => {
+			root.querySelectorAll<HTMLElement>(
+				"[data-channel] > .channel, [data-channel-more] > .channel",
+			).forEach((el) => ro.observe(el));
+		};
+		observeCards();
+
+		root.addEventListener("click", (e) => {
+			const btn = (e.target as HTMLElement).closest(
+				"[data-channel-expand]",
+			) as HTMLButtonElement | null;
+			if (!btn || !root.contains(btn)) return;
+			void expandChannels(root, btn, observeCards);
+		});
+
+		window
+			.matchMedia(DESKTOP_MQ)
+			.addEventListener("change", () => syncHomeChannels(root));
+		window.addEventListener("load", () => syncHomeChannels(root), {
+			once: true,
+		});
+	}
 
     initHomeChannels();
     if (!window.__homeChannelsInit) {

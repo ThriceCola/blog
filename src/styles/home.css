@@ -57,6 +57,24 @@ main.home-main {
     color: var(--semi-accent-color);
 }
 
+/* Desktop: after expand, both entry cards fill the height gap side-by-side */
+.channel-guides {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75em;
+    align-items: stretch;
+    box-sizing: border-box;
+}
+.channel-guides > .entry-card {
+    height: 100%;
+    min-height: 100%;
+    justify-content: center;
+    box-sizing: border-box;
+}
+.channel-guides[hidden] {
+    display: none !important;
+}
+
 .home-channels {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -260,8 +278,9 @@ a.channel__title:visited {
         display: none;
     }
 
-    /* Mobile: one card each, no expand / no loaded extras */
+    /* Mobile: one card each, no expand / guides / loaded extras */
     .channel-expand,
+    .channel-guides,
     [data-channel-more] {
         display: none !important;
     }
