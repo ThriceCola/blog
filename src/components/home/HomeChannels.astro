@@ -29,64 +29,65 @@ const { thought, blog, hasMore } = Astro.props;
     data-home-channels
     data-has-more={hasMore ? "1" : "0"}
 >
-	<div class="channel-col" data-channel="thoughts">
-		<header class="channel-col__head">
-			<a href="/thoughts">碎碎念</a>
-		</header>
-		{thought && <ThoughtChannelCard thought={thought} latest />}
-		<div data-channel-more></div>
-		{
-			hasMore && (
-				<button
-					type="button"
-					class="btn-ghost channel-expand"
-					data-channel-expand
-					hidden
-					aria-label="点击展开更多内容"
-				>
-					点击展开更多
-				</button>
-			)
-		}
-		<footer class="channel-col__foot">
-			<a href="/thoughts">查看更多碎碎念 →</a>
-		</footer>
-	</div>
+    <div class="channel-col" data-channel="thoughts">
+        <header class="channel-col__head">
+            <a href="/thoughts">碎碎念</a>
+        </header>
+        {thought && <ThoughtChannelCard thought={thought} latest />}
+        <div data-channel-more></div>
+        <footer class="channel-col__foot">
+            <a href="/thoughts">查看更多碎碎念 →</a>
+        </footer>
+    </div>
 
-	<div class="channel-col" data-channel="blogs">
-		<header class="channel-col__head">
-			<a href="/blog">文章</a>
-		</header>
-		{blog && <BlogChannelCard blog={blog} latest />}
-		<div data-channel-more></div>
-		{
-			hasMore && (
-				<button
-					type="button"
-					class="btn-ghost channel-expand"
-					data-channel-expand
-					hidden
-					aria-label="点击展开更多内容"
-				>
-					点击展开更多
-				</button>
-			)
-		}
-		<footer class="channel-col__foot">
-			<a href="/blog">查看更多文章 →</a>
-		</footer>
-	</div>
+    <div class="channel-col" data-channel="blogs">
+        <header class="channel-col__head">
+            <a href="/blog">文章</a>
+        </header>
+        {blog && <BlogChannelCard blog={blog} latest />}
+        <div data-channel-more></div>
+        <footer class="channel-col__foot">
+            <a href="/blog">查看更多文章 →</a>
+        </footer>
+    </div>
 
-	<div class="channel-guides" data-channel-guides hidden>
-		<a class="entry-card card card--hover" href="/thoughts">
-			<strong>碎碎念</strong>
-			<span>日常与碎片记录</span>
-		</a>
-		<a class="entry-card card card--hover" href="/blog">
-			<strong>文章</strong>
-			<span>阅读一些长文</span>
-		</a>
-	</div>
+    <div class="channel-guides" data-channel-guides hidden>
+        <a class="entry-card card card--hover" href="/thoughts">
+            <strong>碎碎念</strong>
+            <span>日常与碎片记录</span>
+        </a>
+        <a class="entry-card card card--hover" href="/blog">
+            <strong>文章</strong>
+            <span>阅读一些长文</span>
+        </a>
+    </div>
+
+    {
+        hasMore && (
+            <button
+                type="button"
+                class="btn-ghost channel-bar"
+                data-channel-expand
+                hidden
+                aria-label="点击展开更多内容"
+            >
+                展开
+            </button>
+        )
+    }
+    {
+        hasMore && (
+            <button
+                type="button"
+                class="btn-ghost channel-bar"
+                data-channel-collapse
+                hidden
+                aria-label="收起"
+            >
+                收起
+            </button>
+        )
+    }
 </section>
 
 <script>
@@ -99,217 +100,431 @@ const { thought, blog, hasMore } = Astro.props;
     const DESKTOP_MQ = "(min-width: 801px)";
     const MIN_FILL = 48;
     const MORE_URL = "/home-more/";
+    const EXPAND_KEY = "home-channels-expanded";
+
+    function isExpandedCached() {
+        try {
+            return localStorage.getItem(EXPAND_KEY) === "1";
+        } catch {
+            return false;
+        }
+    }
+
+    function setExpandedCached(expanded: boolean) {
+        try {
+            if (expanded) localStorage.setItem(EXPAND_KEY, "1");
+            else localStorage.removeItem(EXPAND_KEY);
+        } catch {
+            /* ignore quota / private mode */
+        }
+    }
 
     function markEnter(el: HTMLElement, i: number) {
         el.classList.add("card-enter");
         el.style.setProperty("--enter-i", String(i));
     }
 
-    function fillSlot(slot: Element | null, source: Element | null) {
+    function fillSlot(
+        slot: Element | null,
+        source: Element | null,
+        animate = true,
+    ) {
         if (!slot || !source) return;
         slot.replaceChildren(
             ...[...source.children].map((n, i) => {
                 const el = document.importNode(n, true) as HTMLElement;
-                markEnter(el, i);
+                if (animate) markEnter(el, i);
                 return el;
             }),
         );
     }
 
-	function hideExpands(root: HTMLElement) {
-		root.querySelectorAll<HTMLButtonElement>(
-			"[data-channel-expand]",
-		).forEach((btn) => {
-			btn.hidden = true;
-			btn.style.minHeight = "";
-			btn.disabled = false;
-		});
-	}
+    function hideExpands(root: HTMLElement) {
+        const expand = root.querySelector<HTMLButtonElement>(
+            "[data-channel-expand]",
+        );
+        if (!expand) return;
+        expand.hidden = true;
+        expand.disabled = false;
+        if (expand.dataset.label) expand.textContent = expand.dataset.label;
+    }
 
-	function hideGuides(root: HTMLElement) {
-		const guides = root.querySelector<HTMLElement>("[data-channel-guides]");
-		if (!guides) return;
-		guides.hidden = true;
-		guides.style.height = "";
-		guides.style.minHeight = "";
-		root.appendChild(guides);
-	}
+    function hideCollapse(root: HTMLElement) {
+        const collapse = root.querySelector<HTMLButtonElement>(
+            "[data-channel-collapse]",
+        );
+        if (!collapse) return;
+        collapse.hidden = true;
+    }
 
-	function colContentHeight(col: HTMLElement) {
-		let top = Infinity;
-		let bottom = -Infinity;
-		for (const child of col.children) {
-			const el = child as HTMLElement;
-			if (
-				el.matches(
-					"[data-channel-expand], [data-channel-guides], [data-channel-guide]",
-				)
-			)
-				continue;
-			if (el.hidden) continue;
-			const style = getComputedStyle(el);
-			if (style.display === "none") continue;
-			if (el.matches("[data-channel-more]") && !el.childElementCount)
-				continue;
-			const r = el.getBoundingClientRect();
-			if (r.height === 0) continue;
-			top = Math.min(top, r.top);
-			bottom = Math.max(bottom, r.bottom);
-		}
-		return Number.isFinite(top) ? bottom - top : 0;
-	}
+    function placeBarLast(root: HTMLElement) {
+        const expand = root.querySelector<HTMLElement>("[data-channel-expand]");
+        const collapse = root.querySelector<HTMLElement>(
+            "[data-channel-collapse]",
+        );
+        if (expand) root.appendChild(expand);
+        if (collapse) root.appendChild(collapse);
+    }
 
-	function shortColOf(root: HTMLElement) {
-		const cols = [...root.querySelectorAll<HTMLElement>("[data-channel]")];
-		if (cols.length !== 2) return null;
-		const [h0, h1] = cols.map(colContentHeight);
-		const shortCol = cols[h0 <= h1 ? 0 : 1];
-		const gap = parseFloat(getComputedStyle(shortCol).gap) || 0;
-		return { shortCol, fill: Math.abs(h0 - h1) - gap };
-	}
+    function syncChannelCollapse(root: HTMLElement) {
+        const collapse = root.querySelector<HTMLButtonElement>(
+            "[data-channel-collapse]",
+        );
+        if (!collapse) return;
 
-	function syncChannelExpand(root: HTMLElement) {
-		hideGuides(root);
+        const show =
+            root.classList.contains("is-expanded") &&
+            window.matchMedia(DESKTOP_MQ).matches;
+        collapse.hidden = !show;
+        if (show) placeBarLast(root);
+    }
 
-		if (
-			root.dataset.hasMore !== "1" ||
-			root.classList.contains("is-expanded") ||
-			!window.matchMedia(DESKTOP_MQ).matches
-		) {
-			hideExpands(root);
-			return;
-		}
+    function hideGuides(root: HTMLElement) {
+        const guides = root.querySelector<HTMLElement>("[data-channel-guides]");
+        if (!guides) return;
+        guides.hidden = true;
+        guides.style.height = "";
+        guides.style.minHeight = "";
+        guides.classList.remove("card-enter", "card-exit");
+        guides.style.removeProperty("--enter-i");
+        guides.style.removeProperty("--exit-i");
+        delete guides.dataset.entered;
+        root.appendChild(guides);
+        placeBarLast(root);
+    }
 
-		hideExpands(root);
-		const result = shortColOf(root);
-		if (!result) return;
+    function colContentHeight(col: HTMLElement) {
+        let top = Infinity;
+        let bottom = -Infinity;
+        for (const child of col.children) {
+            const el = child as HTMLElement;
+            if (el.matches("[data-channel-guides], [data-channel-guide]"))
+                continue;
+            if (el.hidden) continue;
+            const style = getComputedStyle(el);
+            if (style.display === "none") continue;
+            if (el.matches("[data-channel-more]") && !el.childElementCount)
+                continue;
+            const r = el.getBoundingClientRect();
+            if (r.height === 0) continue;
+            top = Math.min(top, r.top);
+            bottom = Math.max(bottom, r.bottom);
+        }
+        return Number.isFinite(top) ? bottom - top : 0;
+    }
 
-		const expand = result.shortCol.querySelector<HTMLButtonElement>(
-			"[data-channel-expand]",
-		);
-		if (!expand) return;
+    function shortColOf(root: HTMLElement) {
+        const cols = [...root.querySelectorAll<HTMLElement>("[data-channel]")];
+        if (cols.length !== 2) return null;
+        const [h0, h1] = cols.map(colContentHeight);
+        const shortCol = cols[h0 <= h1 ? 0 : 1];
+        const gap = parseFloat(getComputedStyle(shortCol).gap) || 0;
+        return { shortCol, fill: Math.abs(h0 - h1) - gap };
+    }
 
-		expand.hidden = false;
-		if (result.fill >= MIN_FILL) expand.style.minHeight = `${result.fill}px`;
-	}
+    function syncChannelExpand(root: HTMLElement) {
+        hideGuides(root);
+        hideCollapse(root);
 
-	function syncChannelGuide(root: HTMLElement) {
-		hideExpands(root);
+        const expand = root.querySelector<HTMLButtonElement>(
+            "[data-channel-expand]",
+        );
+        if (!expand) return;
 
-		const guides = root.querySelector<HTMLElement>("[data-channel-guides]");
-		if (!guides) return;
+        const show =
+            root.dataset.hasMore === "1" &&
+            !root.classList.contains("is-expanded") &&
+            window.matchMedia(DESKTOP_MQ).matches;
+        expand.hidden = !show;
+        if (show) placeBarLast(root);
+    }
 
-		if (
-			!root.classList.contains("is-expanded") ||
-			!window.matchMedia(DESKTOP_MQ).matches
-		) {
-			hideGuides(root);
-			return;
-		}
+    function syncChannelGuide(root: HTMLElement, animate = true) {
+        hideExpands(root);
 
-		// Park guides outside columns so measurement ignores them
-		guides.hidden = true;
-		guides.style.height = "";
-		guides.style.minHeight = "";
-		root.appendChild(guides);
+        const guides = root.querySelector<HTMLElement>("[data-channel-guides]");
+        if (!guides) return;
 
-		const result = shortColOf(root);
-		if (!result || result.fill < MIN_FILL) return;
+        if (
+            !root.classList.contains("is-expanded") ||
+            !window.matchMedia(DESKTOP_MQ).matches
+        ) {
+            hideGuides(root);
+            syncChannelCollapse(root);
+            return;
+        }
 
-		const foot = result.shortCol.querySelector(".channel-col__foot");
-		result.shortCol.insertBefore(guides, foot);
-		guides.hidden = false;
-		guides.style.height = `${result.fill}px`;
-		guides.style.minHeight = `${result.fill}px`;
-		if (!guides.classList.contains("card-enter")) markEnter(guides, 0);
-	}
+        // Park guides outside columns so measurement ignores them
+        guides.hidden = true;
+        guides.style.height = "";
+        guides.style.minHeight = "";
+        root.appendChild(guides);
 
-	function syncHomeChannels(root: HTMLElement) {
-		if (root.classList.contains("is-expanded")) syncChannelGuide(root);
-		else syncChannelExpand(root);
-	}
+        const result = shortColOf(root);
+        if (!result || result.fill < MIN_FILL) {
+            syncChannelCollapse(root);
+            return;
+        }
 
-	async function expandChannels(
-		root: HTMLElement,
-		btn: HTMLButtonElement,
-		observeCards: () => void,
-	) {
-		if (root.classList.contains("is-expanded") || root.dataset.loading)
-			return;
+        const foot = result.shortCol.querySelector(".channel-col__foot");
+        result.shortCol.insertBefore(guides, foot);
+        guides.hidden = false;
+        guides.style.height = `${result.fill}px`;
+        guides.style.minHeight = `${result.fill}px`;
+        if (!guides.dataset.entered) {
+            if (animate) markEnter(guides, 0);
+            guides.dataset.entered = "1";
+        }
+        syncChannelCollapse(root);
+    }
 
-		root.dataset.loading = "1";
-		btn.disabled = true;
-		const prev = btn.textContent;
-		btn.textContent = "加载中…";
+    function syncHomeChannels(root: HTMLElement) {
+        if (root.dataset.loading) return;
+        if (root.classList.contains("is-expanded")) syncChannelGuide(root);
+        else syncChannelExpand(root);
+    }
 
-		try {
-			const res = await fetch(MORE_URL, { credentials: "same-origin" });
-			if (!res.ok) throw new Error(`HTTP ${res.status}`);
-			const doc = new DOMParser().parseFromString(
-				await res.text(),
-				"text/html",
-			);
+    function shouldRestoreExpand(root: HTMLElement) {
+        return (
+            isExpandedCached() &&
+            !root.classList.contains("is-expanded") &&
+            root.dataset.hasMore === "1" &&
+            !root.dataset.loading &&
+            window.matchMedia(DESKTOP_MQ).matches
+        );
+    }
 
-			fillSlot(
-				root.querySelector(
-					'[data-channel="thoughts"] [data-channel-more]',
-				),
-				doc.querySelector("[data-more-thoughts]"),
-			);
-			fillSlot(
-				root.querySelector(
-					'[data-channel="blogs"] [data-channel-more]',
-				),
-				doc.querySelector("[data-more-blogs]"),
-			);
+    function waitCardExit(els: HTMLElement[]) {
+        if (
+            !els.length ||
+            window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ) {
+            return Promise.resolve();
+        }
+        return Promise.all(
+            els.map(
+                (el) =>
+                    new Promise<void>((resolve) => {
+                        let settled = false;
+                        const done = () => {
+                            if (settled) return;
+                            settled = true;
+                            el.removeEventListener("animationend", onEnd);
+                            resolve();
+                        };
+                        const onEnd = (e: AnimationEvent) => {
+                            if (
+                                e.target === el &&
+                                e.animationName === "card-exit"
+                            )
+                                done();
+                        };
+                        el.addEventListener("animationend", onEnd);
+                        window.setTimeout(done, 700);
+                    }),
+            ),
+        );
+    }
 
-			root.classList.add("is-expanded");
-			hideExpands(root);
-			observeCards();
-			document.dispatchEvent(new Event("home:content"));
-			requestAnimationFrame(() => syncChannelGuide(root));
-		} catch {
-			btn.textContent = prev || "点击展开更多";
-			btn.disabled = false;
-			syncChannelExpand(root);
-		} finally {
-			delete root.dataset.loading;
-		}
-	}
+    function scrollToTop() {
+        if (window.scrollY <= 1) return Promise.resolve();
 
-	function initHomeChannels() {
-		const root = document.querySelector<HTMLElement>(
-			"[data-home-channels]",
-		);
-		if (!root) return;
+        const reduce = window.matchMedia(
+            "(prefers-reduced-motion: reduce)",
+        ).matches;
+        if (reduce) {
+            window.scrollTo(0, 0);
+            return Promise.resolve();
+        }
 
-		syncHomeChannels(root);
-		if (root.dataset.expandBound) return;
-		root.dataset.expandBound = "1";
+        return new Promise<void>((resolve) => {
+            let settled = false;
+            const finish = () => {
+                if (settled) return;
+                settled = true;
+                window.removeEventListener("scrollend", finish);
+                resolve();
+            };
+            window.addEventListener("scrollend", finish);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            // scrollend is incomplete in some browsers; bound by distance
+            window.setTimeout(
+                finish,
+                Math.min(900, Math.max(280, window.scrollY * 0.6)),
+            );
+        });
+    }
 
-		const ro = new ResizeObserver(() => syncHomeChannels(root));
-		const observeCards = () => {
-			root.querySelectorAll<HTMLElement>(
-				"[data-channel] > .channel, [data-channel-more] > .channel",
-			).forEach((el) => ro.observe(el));
-		};
-		observeCards();
+    async function expandChannels(
+        root: HTMLElement,
+        btn: HTMLButtonElement,
+        observeCards: () => void,
+        animate = true,
+    ) {
+        if (root.classList.contains("is-expanded") || root.dataset.loading)
+            return;
 
-		root.addEventListener("click", (e) => {
-			const btn = (e.target as HTMLElement).closest(
-				"[data-channel-expand]",
-			) as HTMLButtonElement | null;
-			if (!btn || !root.contains(btn)) return;
-			void expandChannels(root, btn, observeCards);
-		});
+        root.dataset.loading = "1";
+        btn.disabled = true;
+        if (!btn.dataset.label) btn.dataset.label = btn.textContent || "展开";
+        const prev = btn.dataset.label;
+        btn.textContent = "加载中…";
 
-		window
-			.matchMedia(DESKTOP_MQ)
-			.addEventListener("change", () => syncHomeChannels(root));
-		window.addEventListener("load", () => syncHomeChannels(root), {
-			once: true,
-		});
-	}
+        try {
+            const res = await fetch(MORE_URL, { credentials: "same-origin" });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const doc = new DOMParser().parseFromString(
+                await res.text(),
+                "text/html",
+            );
+
+            fillSlot(
+                root.querySelector(
+                    '[data-channel="thoughts"] [data-channel-more]',
+                ),
+                doc.querySelector("[data-more-thoughts]"),
+                animate,
+            );
+            fillSlot(
+                root.querySelector(
+                    '[data-channel="blogs"] [data-channel-more]',
+                ),
+                doc.querySelector("[data-more-blogs]"),
+                animate,
+            );
+
+            root.classList.add("is-expanded");
+            setExpandedCached(true);
+            hideExpands(root);
+            observeCards();
+            document.dispatchEvent(new Event("home:content"));
+            requestAnimationFrame(() => syncChannelGuide(root, animate));
+        } catch {
+            btn.textContent = prev;
+            btn.disabled = false;
+            syncChannelExpand(root);
+        } finally {
+            delete root.dataset.loading;
+        }
+    }
+
+    async function collapseChannels(root: HTMLElement) {
+        if (!root.classList.contains("is-expanded") || root.dataset.loading)
+            return;
+
+        root.dataset.loading = "1";
+        setExpandedCached(false);
+
+        const markExit = (els: HTMLElement[]) => {
+            els.forEach((el, i) => {
+                el.classList.remove("card-enter");
+                el.style.removeProperty("--enter-i");
+                // reverse: last-loaded cards leave first, mirrors expand stagger
+                el.style.setProperty("--exit-i", String(els.length - 1 - i));
+                el.classList.add("card-exit");
+            });
+            return els;
+        };
+
+        const leaving = [
+            ...markExit([
+                ...root.querySelectorAll<HTMLElement>(
+                    '[data-channel="thoughts"] [data-channel-more] > .channel',
+                ),
+            ]),
+            ...markExit([
+                ...root.querySelectorAll<HTMLElement>(
+                    '[data-channel="blogs"] [data-channel-more] > .channel',
+                ),
+            ]),
+        ];
+
+        const guides = root.querySelector<HTMLElement>("[data-channel-guides]");
+        if (guides && !guides.hidden) leaving.push(...markExit([guides]));
+
+        const collapse = root.querySelector<HTMLElement>(
+            "[data-channel-collapse]",
+        );
+        if (collapse && !collapse.hidden) leaving.push(...markExit([collapse]));
+
+        // Keep exited nodes in layout until scroll settles, so height
+        // doesn't collapse mid-jump.
+        await Promise.all([waitCardExit(leaving), scrollToTop()]);
+
+        root.classList.remove("is-expanded");
+        root.querySelectorAll("[data-channel-more]").forEach((slot) => {
+            slot.replaceChildren();
+        });
+        hideGuides(root);
+        hideCollapse(root);
+        collapse?.classList.remove("card-exit");
+        collapse?.style.removeProperty("--exit-i");
+        delete root.dataset.loading;
+        syncChannelExpand(root);
+    }
+
+    const observeByRoot = new WeakMap<HTMLElement, () => void>();
+
+    function tryRestoreExpand(root: HTMLElement) {
+        const observeCards = observeByRoot.get(root) ?? (() => {});
+        if (!shouldRestoreExpand(root)) {
+            syncHomeChannels(root);
+            return;
+        }
+        const btn = root.querySelector<HTMLButtonElement>(
+            "[data-channel-expand]",
+        );
+        if (!btn) {
+            syncHomeChannels(root);
+            return;
+        }
+        void expandChannels(root, btn, observeCards, false);
+    }
+
+    function initHomeChannels() {
+        const root = document.querySelector<HTMLElement>(
+            "[data-home-channels]",
+        );
+        if (!root) return;
+
+        if (!root.dataset.expandBound) {
+            root.dataset.expandBound = "1";
+
+            const ro = new ResizeObserver(() => syncHomeChannels(root));
+            const observeCards = () => {
+                root.querySelectorAll<HTMLElement>(
+                    "[data-channel] > .channel, [data-channel-more] > .channel",
+                ).forEach((el) => ro.observe(el));
+            };
+            observeByRoot.set(root, observeCards);
+            observeCards();
+
+            root.addEventListener("click", (e) => {
+                const target = e.target as HTMLElement;
+                const collapse = target.closest(
+                    "[data-channel-collapse]",
+                ) as HTMLButtonElement | null;
+                if (collapse && root.contains(collapse)) {
+                    void collapseChannels(root);
+                    return;
+                }
+                const btn = target.closest(
+                    "[data-channel-expand]",
+                ) as HTMLButtonElement | null;
+                if (!btn || !root.contains(btn)) return;
+                void expandChannels(root, btn, observeCards);
+            });
+
+            window.matchMedia(DESKTOP_MQ).addEventListener("change", () => {
+                tryRestoreExpand(root);
+            });
+            window.addEventListener("load", () => tryRestoreExpand(root), {
+                once: true,
+            });
+        }
+
+        tryRestoreExpand(root);
+    }
 
     initHomeChannels();
     if (!window.__homeChannelsInit) {

@@ -307,13 +307,31 @@ textarea {
     }
 }
 
+@keyframes card-exit {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+}
+
 .card-enter {
     animation: card-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
     animation-delay: calc(var(--enter-i, 0) * 0.07s);
 }
 
+.card-exit {
+    animation: card-exit 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(var(--exit-i, 0) * 0.07s);
+    pointer-events: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
-    .card-enter {
+    .card-enter,
+    .card-exit {
         animation: none;
     }
 }

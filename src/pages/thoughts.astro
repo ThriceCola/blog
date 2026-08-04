@@ -26,7 +26,7 @@ const renderedPosts = await Promise.all(
     <head>
         <BaseHead
             title="碎碎念 — ThriceCola's Blog"
-            description="ThriceCola 的日常与碎碎念"
+            description="三瓶可乐不过岗的日常与碎碎念"
         />
         <ClientRouter />
         <LoadingBar />
@@ -209,7 +209,9 @@ const renderedPosts = await Promise.all(
             <div id="sentinel"></div>
             {
                 renderedPosts.length > BATCH && (
-                    <p id="feed-end" class="feed-end" hidden>— 已经到底啦 —</p>
+                    <p id="feed-end" class="feed-end" hidden>
+                        — 已经到底啦 —
+                    </p>
                 )
             }
         </main>
@@ -223,24 +225,34 @@ const renderedPosts = await Promise.all(
             }
 
             function initThoughtImages(root?: ParentNode) {
-                (root || document).querySelectorAll(".thought-body img").forEach((el) => {
-                    const img = el as HTMLImageElement;
-                    if (img.dataset.progressive) return;
-                    img.dataset.progressive = "1";
-                    if (img.complete) {
-                        img.style.transition = "none";
-                        img.classList.add("loaded");
-                        img.offsetHeight;
-                        img.style.transition = "";
-                    } else {
-                        img.addEventListener("load", () => img.classList.add("loaded"), {
-                            once: true,
-                        });
-                        img.addEventListener("error", () => img.classList.add("loaded"), {
-                            once: true,
-                        });
-                    }
-                });
+                (root || document)
+                    .querySelectorAll(".thought-body img")
+                    .forEach((el) => {
+                        const img = el as HTMLImageElement;
+                        if (img.dataset.progressive) return;
+                        img.dataset.progressive = "1";
+                        if (img.complete) {
+                            img.style.transition = "none";
+                            img.classList.add("loaded");
+                            img.offsetHeight;
+                            img.style.transition = "";
+                        } else {
+                            img.addEventListener(
+                                "load",
+                                () => img.classList.add("loaded"),
+                                {
+                                    once: true,
+                                },
+                            );
+                            img.addEventListener(
+                                "error",
+                                () => img.classList.add("loaded"),
+                                {
+                                    once: true,
+                                },
+                            );
+                        }
+                    });
             }
 
             function initThoughtFeed() {
@@ -253,19 +265,29 @@ const renderedPosts = await Promise.all(
                 if (!feed || !sentinel || feed.dataset.bound) return;
                 feed.dataset.bound = "1";
 
-                const cards = feed.querySelectorAll<HTMLElement>(".thought-card.hidden-post");
+                const cards = feed.querySelectorAll<HTMLElement>(
+                    ".thought-card.hidden-post",
+                );
                 let remaining = cards.length;
                 let loading = false;
 
                 const observer = new IntersectionObserver(
                     (entries) => {
-                        if (!entries[0].isIntersecting || loading || remaining <= 0) return;
+                        if (
+                            !entries[0].isIntersecting ||
+                            loading ||
+                            remaining <= 0
+                        )
+                            return;
                         loading = true;
 
                         const start = cards.length - remaining;
                         const end = Math.min(start + BATCH, cards.length);
                         for (let i = start; i < end; i++) {
-                            cards[i].style.setProperty("--enter-i", String(i - start));
+                            cards[i].style.setProperty(
+                                "--enter-i",
+                                String(i - start),
+                            );
                             cards[i].classList.add("card-enter");
                             cards[i].classList.remove("hidden-post");
                             initThoughtImages(cards[i]);

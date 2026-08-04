@@ -12,6 +12,7 @@ main.home-main {
 
 .home-hero h1 {
     font-size: 2.2em;
+    /*font-weight: 500;*/
     margin-bottom: 0.4em;
 }
 
@@ -65,12 +66,14 @@ main.home-main {
     align-items: stretch;
     box-sizing: border-box;
 }
-.channel-guides > .entry-card {
+
+.channel-guides>.entry-card {
     height: 100%;
     min-height: 100%;
     justify-content: center;
     box-sizing: border-box;
 }
+
 .channel-guides[hidden] {
     display: none !important;
 }
@@ -78,9 +81,10 @@ main.home-main {
 .home-channels {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1.5em;
+    column-gap: 1.5em;
+    /* Match channel-col card gap so collapse sits like the expand button */
+    row-gap: 1em;
     align-items: start;
-    padding-bottom: 2em;
 }
 
 .channel-col {
@@ -101,25 +105,27 @@ main.home-main {
     gap: 1em;
 }
 
-.channel-expand {
+/* Desktop: short full-width expand / collapse bar */
+.channel-bar {
+    grid-column: 1 / -1;
     width: 100%;
-    min-height: 3.5em;
-    padding: 1em;
+    min-height: 2.25em;
+    padding: 0.55em 1em;
     font-size: 0.95em;
     letter-spacing: 0.04em;
     color: color-mix(in srgb, var(--accent-color) 22%, transparent);
 }
 
-.channel-expand:hover:not(:disabled),
-.channel-expand:focus-visible:not(:disabled) {
+.channel-bar:hover:not(:disabled),
+.channel-bar:focus-visible:not(:disabled) {
     color: var(--accent-color);
 }
 
-.channel-expand:disabled {
+.channel-bar:disabled {
     color: color-mix(in srgb, var(--accent-color) 40%, transparent);
 }
 
-.channel-expand[hidden] {
+.channel-bar[hidden] {
     display: none !important;
 }
 
@@ -259,7 +265,8 @@ a.channel__title:visited {
 
     .home-channels {
         grid-template-columns: 1fr;
-        gap: 1.5em;
+        column-gap: 1.5em;
+        row-gap: 1.5em;
     }
 
     .channel-col__head {
@@ -278,8 +285,8 @@ a.channel__title:visited {
         display: none;
     }
 
-    /* Mobile: one card each, no expand / guides / loaded extras */
-    .channel-expand,
+    /* Mobile: one card each, no expand / collapse / guides / loaded extras */
+    .channel-bar,
     .channel-guides,
     [data-channel-more] {
         display: none !important;
