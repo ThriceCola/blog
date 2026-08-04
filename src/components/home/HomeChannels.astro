@@ -51,43 +51,45 @@ const { thought, blog, hasMore } = Astro.props;
         </footer>
     </div>
 
+    {
+        /* Desktop: fills short-column height gap; toggle sits under the nav cards */
+    }
     <div class="channel-guides" data-channel-guides hidden>
-        <a class="entry-card card card--hover" href="/thoughts">
-            <strong>碎碎念</strong>
-            <span>日常与碎片记录</span>
-        </a>
-        <a class="entry-card card card--hover" href="/blog">
-            <strong>文章</strong>
-            <span>阅读一些长文</span>
-        </a>
+        <div class="channel-guides__cards">
+            <a class="entry-card card card--hover" href="/thoughts">
+                <strong>碎碎念</strong>
+                <span>日常与碎片记录</span>
+            </a>
+            <a class="entry-card card card--hover" href="/blog">
+                <strong>文章</strong>
+                <span>阅读一些长文</span>
+            </a>
+        </div>
+        {
+            hasMore && (
+                <div class="channel-guides__action">
+                    <button
+                        type="button"
+                        class="channel-toggle card card--hover"
+                        data-channel-expand
+                        hidden
+                        aria-label="展开更多内容"
+                    >
+                        展开
+                    </button>
+                    <button
+                        type="button"
+                        class="channel-toggle card card--hover"
+                        data-channel-collapse
+                        hidden
+                        aria-label="收起"
+                    >
+                        收起
+                    </button>
+                </div>
+            )
+        }
     </div>
-
-    {
-        hasMore && (
-            <button
-                type="button"
-                class="btn-ghost channel-bar"
-                data-channel-expand
-                hidden
-                aria-label="点击展开更多内容"
-            >
-                展开
-            </button>
-        )
-    }
-    {
-        hasMore && (
-            <button
-                type="button"
-                class="btn-ghost channel-bar"
-                data-channel-collapse
-                hidden
-                aria-label="收起"
-            >
-                收起
-            </button>
-        )
-    }
 </section>
 
 <script>
@@ -101,6 +103,8 @@ const { thought, blog, hasMore } = Astro.props;
     const MIN_FILL = 48;
     const MORE_URL = "/home-more/";
     const EXPAND_KEY = "home-channels-expanded";
+    const ENTER_MS = 400;
+    const STAGGER_MS = 70;
 
     function isExpandedCached() {
         try {
@@ -119,24 +123,21 @@ const { thought, blog, hasMore } = Astro.props;
         }
     }
 
-    function markEnter(el: HTMLElement, i: number) {
-        el.classList.add("card-enter");
-        el.style.setProperty("--enter-i", String(i));
-    }
-
     function fillSlot(
         slot: Element | null,
         source: Element | null,
         animate = true,
     ) {
         if (!slot || !source) return;
-        slot.replaceChildren(
-            ...[...source.children].map((n, i) => {
-                const el = document.importNode(n, true) as HTMLElement;
-                if (animate) markEnter(el, i);
-                return el;
-            }),
+        const cards = [...source.children].map(
+            (n) => document.importNode(n, true) as HTMLElement,
         );
+        cards.forEach((card, i) => {
+            if (!animate) return;
+            card.style.setProperty("--enter-i", String(i));
+            card.classList.add("card-enter");
+        });
+        slot.replaceChildren(...cards);
     }
 
     function hideExpands(root: HTMLElement) {
@@ -157,40 +158,46 @@ const { thought, blog, hasMore } = Astro.props;
         collapse.hidden = true;
     }
 
-    function placeBarLast(root: HTMLElement) {
-        const expand = root.querySelector<HTMLElement>("[data-channel-expand]");
-        const collapse = root.querySelector<HTMLElement>(
-            "[data-channel-collapse]",
+    function syncToggle(root: HTMLElement) {
+        const expand = root.querySelector<HTMLButtonElement>(
+            "[data-channel-expand]",
         );
-        if (expand) root.appendChild(expand);
-        if (collapse) root.appendChild(collapse);
-    }
-
-    function syncChannelCollapse(root: HTMLElement) {
         const collapse = root.querySelector<HTMLButtonElement>(
             "[data-channel-collapse]",
         );
-        if (!collapse) return;
+        const desktop = window.matchMedia(DESKTOP_MQ).matches;
+        const hasMore = root.dataset.hasMore === "1";
+        const expanded = root.classList.contains("is-expanded");
 
-        const show =
-            root.classList.contains("is-expanded") &&
-            window.matchMedia(DESKTOP_MQ).matches;
-        collapse.hidden = !show;
-        if (show) placeBarLast(root);
+        if (expand) {
+            expand.hidden = !(desktop && hasMore && !expanded);
+            if (!expand.hidden) {
+                expand.disabled = false;
+                if (expand.dataset.label)
+                    expand.textContent = expand.dataset.label;
+            }
+        }
+        if (collapse) {
+            collapse.hidden = !(desktop && hasMore && expanded);
+            collapse.disabled = root.dataset.loading === "1";
+        }
     }
 
-    function hideGuides(root: HTMLElement) {
+    function parkGuides(root: HTMLElement) {
         const guides = root.querySelector<HTMLElement>("[data-channel-guides]");
         if (!guides) return;
         guides.hidden = true;
         guides.style.height = "";
         guides.style.minHeight = "";
-        guides.classList.remove("card-enter", "card-exit");
-        guides.style.removeProperty("--enter-i");
-        guides.style.removeProperty("--exit-i");
-        delete guides.dataset.entered;
         root.appendChild(guides);
-        placeBarLast(root);
+    }
+
+    function hideGuides(root: HTMLElement) {
+        const guides = root.querySelector<HTMLElement>("[data-channel-guides]");
+        if (!guides) return;
+        parkGuides(root);
+        hideExpands(root);
+        hideCollapse(root);
     }
 
     function colContentHeight(col: HTMLElement) {
@@ -222,66 +229,37 @@ const { thought, blog, hasMore } = Astro.props;
         return { shortCol, fill: Math.abs(h0 - h1) - gap };
     }
 
-    function syncChannelExpand(root: HTMLElement) {
-        hideGuides(root);
-        hideCollapse(root);
-
-        const expand = root.querySelector<HTMLButtonElement>(
-            "[data-channel-expand]",
-        );
-        if (!expand) return;
-
-        const show =
-            root.dataset.hasMore === "1" &&
-            !root.classList.contains("is-expanded") &&
-            window.matchMedia(DESKTOP_MQ).matches;
-        expand.hidden = !show;
-        if (show) placeBarLast(root);
-    }
-
-    function syncChannelGuide(root: HTMLElement, animate = true) {
-        hideExpands(root);
+    function syncChannelFill(root: HTMLElement) {
+        if (!window.matchMedia(DESKTOP_MQ).matches) {
+            hideGuides(root);
+            return;
+        }
 
         const guides = root.querySelector<HTMLElement>("[data-channel-guides]");
         if (!guides) return;
 
-        if (
-            !root.classList.contains("is-expanded") ||
-            !window.matchMedia(DESKTOP_MQ).matches
-        ) {
-            hideGuides(root);
-            syncChannelCollapse(root);
-            return;
-        }
-
-        // Park guides outside columns so measurement ignores them
-        guides.hidden = true;
-        guides.style.height = "";
-        guides.style.minHeight = "";
-        root.appendChild(guides);
+        parkGuides(root);
+        hideExpands(root);
+        hideCollapse(root);
 
         const result = shortColOf(root);
-        if (!result || result.fill < MIN_FILL) {
-            syncChannelCollapse(root);
-            return;
-        }
+        if (!result) return;
 
         const foot = result.shortCol.querySelector(".channel-col__foot");
         result.shortCol.insertBefore(guides, foot);
         guides.hidden = false;
-        guides.style.height = `${result.fill}px`;
-        guides.style.minHeight = `${result.fill}px`;
-        if (!guides.dataset.entered) {
-            if (animate) markEnter(guides, 0);
-            guides.dataset.entered = "1";
+
+        if (result.fill >= MIN_FILL) {
+            guides.style.height = `${result.fill}px`;
+            guides.style.minHeight = `${result.fill}px`;
         }
-        syncChannelCollapse(root);
+
+        syncToggle(root);
     }
 
     function syncHomeChannels(root: HTMLElement) {
         if (root.dataset.loading) return;
-        if (root.classList.contains("is-expanded")) syncChannelGuide(root);
-        else syncChannelExpand(root);
+        syncChannelFill(root);
     }
 
     function shouldRestoreExpand(root: HTMLElement) {
@@ -294,64 +272,15 @@ const { thought, blog, hasMore } = Astro.props;
         );
     }
 
-    function waitCardExit(els: HTMLElement[]) {
-        if (
-            !els.length ||
-            window.matchMedia("(prefers-reduced-motion: reduce)").matches
-        ) {
-            return Promise.resolve();
-        }
-        return Promise.all(
-            els.map(
-                (el) =>
-                    new Promise<void>((resolve) => {
-                        let settled = false;
-                        const done = () => {
-                            if (settled) return;
-                            settled = true;
-                            el.removeEventListener("animationend", onEnd);
-                            resolve();
-                        };
-                        const onEnd = (e: AnimationEvent) => {
-                            if (
-                                e.target === el &&
-                                e.animationName === "card-exit"
-                            )
-                                done();
-                        };
-                        el.addEventListener("animationend", onEnd);
-                        window.setTimeout(done, 700);
-                    }),
-            ),
-        );
-    }
-
     function scrollToTop() {
-        if (window.scrollY <= 1) return Promise.resolve();
+        if (window.scrollY <= 1) return;
 
         const reduce = window.matchMedia(
             "(prefers-reduced-motion: reduce)",
         ).matches;
-        if (reduce) {
-            window.scrollTo(0, 0);
-            return Promise.resolve();
-        }
-
-        return new Promise<void>((resolve) => {
-            let settled = false;
-            const finish = () => {
-                if (settled) return;
-                settled = true;
-                window.removeEventListener("scrollend", finish);
-                resolve();
-            };
-            window.addEventListener("scrollend", finish);
-            window.scrollTo({ top: 0, behavior: "smooth" });
-            // scrollend is incomplete in some browsers; bound by distance
-            window.setTimeout(
-                finish,
-                Math.min(900, Math.max(280, window.scrollY * 0.6)),
-            );
+        window.scrollTo({
+            top: 0,
+            behavior: reduce ? "auto" : "smooth",
         });
     }
 
@@ -395,72 +324,75 @@ const { thought, blog, hasMore } = Astro.props;
 
             root.classList.add("is-expanded");
             setExpandedCached(true);
-            hideExpands(root);
             observeCards();
             document.dispatchEvent(new Event("home:content"));
-            requestAnimationFrame(() => syncChannelGuide(root, animate));
+            syncChannelFill(root);
         } catch {
             btn.textContent = prev;
             btn.disabled = false;
-            syncChannelExpand(root);
+            syncChannelFill(root);
         } finally {
             delete root.dataset.loading;
         }
     }
 
-    async function collapseChannels(root: HTMLElement) {
+    function collapseChannels(root: HTMLElement) {
         if (!root.classList.contains("is-expanded") || root.dataset.loading)
             return;
 
         root.dataset.loading = "1";
         setExpandedCached(false);
-
-        const markExit = (els: HTMLElement[]) => {
-            els.forEach((el, i) => {
-                el.classList.remove("card-enter");
-                el.style.removeProperty("--enter-i");
-                // reverse: last-loaded cards leave first, mirrors expand stagger
-                el.style.setProperty("--exit-i", String(els.length - 1 - i));
-                el.classList.add("card-exit");
-            });
-            return els;
-        };
-
-        const leaving = [
-            ...markExit([
-                ...root.querySelectorAll<HTMLElement>(
-                    '[data-channel="thoughts"] [data-channel-more] > .channel',
-                ),
-            ]),
-            ...markExit([
-                ...root.querySelectorAll<HTMLElement>(
-                    '[data-channel="blogs"] [data-channel-more] > .channel',
-                ),
-            ]),
-        ];
-
-        const guides = root.querySelector<HTMLElement>("[data-channel-guides]");
-        if (guides && !guides.hidden) leaving.push(...markExit([guides]));
-
-        const collapse = root.querySelector<HTMLElement>(
+        // Scroll back to top first: the fade-out keeps the extra cards in
+        // layout, so waiting until teardown would let the shrinking document
+        // height clamp the scroll position (causing a visible jump).
+        scrollToTop();
+        const collapseBtn = root.querySelector<HTMLButtonElement>(
             "[data-channel-collapse]",
         );
-        if (collapse && !collapse.hidden) leaving.push(...markExit([collapse]));
+        if (collapseBtn) collapseBtn.disabled = true;
 
-        // Keep exited nodes in layout until scroll settles, so height
-        // doesn't collapse mid-jump.
-        await Promise.all([waitCardExit(leaving), scrollToTop()]);
+        const slots = [
+            ...root.querySelectorAll<HTMLElement>("[data-channel-more]"),
+        ];
+        const cards = slots.flatMap((slot) => [
+            ...slot.children,
+        ]) as HTMLElement[];
 
-        root.classList.remove("is-expanded");
-        root.querySelectorAll("[data-channel-more]").forEach((slot) => {
-            slot.replaceChildren();
+        const reduce = window.matchMedia(
+            "(prefers-reduced-motion: reduce)",
+        ).matches;
+
+        const teardown = () => {
+            const guides = root.querySelector<HTMLElement>(
+                "[data-channel-guides]",
+            );
+            slots.forEach((slot) => slot.replaceChildren());
+            root.classList.remove("is-expanded");
+            delete root.dataset.loading;
+            syncChannelFill(root);
+            // Reveal the height-fill area in its collapsed size with a fade —
+            // same easing and duration as the card fades.
+            if (guides && !reduce) {
+                guides.animate([{ opacity: 0 }, { opacity: 1 }], {
+                    duration: ENTER_MS,
+                    easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+                });
+            }
+        };
+
+        if (reduce || cards.length === 0) {
+            teardown();
+            return;
+        }
+
+        cards.forEach((card, i) => {
+            card.style.setProperty("--exit-i", String(i));
+            card.classList.add("card-exit");
         });
-        hideGuides(root);
-        hideCollapse(root);
-        collapse?.classList.remove("card-exit");
-        collapse?.style.removeProperty("--exit-i");
-        delete root.dataset.loading;
-        syncChannelExpand(root);
+
+        // Teardown once the fade-out has finished (with a small buffer).
+        const dur = ENTER_MS + (cards.length - 1) * STAGGER_MS;
+        window.setTimeout(teardown, dur + 120);
     }
 
     const observeByRoot = new WeakMap<HTMLElement, () => void>();
@@ -478,6 +410,8 @@ const { thought, blog, hasMore } = Astro.props;
             syncHomeChannels(root);
             return;
         }
+        // Restored state (cached in localStorage) appears instantly — no
+        // entrance animation.
         void expandChannels(root, btn, observeCards, false);
     }
 

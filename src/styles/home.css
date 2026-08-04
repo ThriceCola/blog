@@ -58,20 +58,33 @@ main.home-main {
     color: var(--semi-accent-color);
 }
 
-/* Desktop: after expand, both entry cards fill the height gap side-by-side */
+/* Desktop: nav cards fill short-column height gap; toggle under them */
 .channel-guides {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75em;
+    box-sizing: border-box;
+    min-height: 0;
+}
+
+.channel-guides__cards {
+    flex: 1 1 auto;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0.75em;
     align-items: stretch;
+    min-height: 0;
+}
+
+.channel-guides__cards > .entry-card {
+    height: 100%;
+    min-height: 0;
+    justify-content: center;
     box-sizing: border-box;
 }
 
-.channel-guides>.entry-card {
-    height: 100%;
-    min-height: 100%;
-    justify-content: center;
-    box-sizing: border-box;
+.channel-guides__action {
+    flex: 0 0 auto;
 }
 
 .channel-guides[hidden] {
@@ -82,7 +95,6 @@ main.home-main {
     display: grid;
     grid-template-columns: 1fr 1fr;
     column-gap: 1.5em;
-    /* Match channel-col card gap so collapse sits like the expand button */
     row-gap: 1em;
     align-items: start;
 }
@@ -105,28 +117,34 @@ main.home-main {
     gap: 1em;
 }
 
-/* Desktop: short full-width expand / collapse bar */
-.channel-bar {
-    grid-column: 1 / -1;
+/* Expand / collapse card under the nav cards */
+.channel-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
-    min-height: 2.25em;
-    padding: 0.55em 1em;
+    margin: 0;
+    padding: 12px 16px;
+    cursor: pointer;
+    font: inherit;
     font-size: 0.95em;
     letter-spacing: 0.04em;
-    color: color-mix(in srgb, var(--accent-color) 22%, transparent);
+    color: var(--semi-accent-color);
+    background-color: var(--background-color);
 }
 
-.channel-bar:hover:not(:disabled),
-.channel-bar:focus-visible:not(:disabled) {
+.channel-toggle:hover:not(:disabled),
+.channel-toggle:focus-visible:not(:disabled) {
     color: var(--accent-color);
 }
 
-.channel-bar:disabled {
-    color: color-mix(in srgb, var(--accent-color) 40%, transparent);
+.channel-toggle[hidden] {
+    display: none !important;
 }
 
-.channel-bar[hidden] {
-    display: none !important;
+.channel-toggle:disabled {
+    cursor: wait;
+    opacity: 0.75;
 }
 
 .channel-col__head {
@@ -286,7 +304,6 @@ a.channel__title:visited {
     }
 
     /* Mobile: one card each, no expand / collapse / guides / loaded extras */
-    .channel-bar,
     .channel-guides,
     [data-channel-more] {
         display: none !important;
