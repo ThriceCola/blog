@@ -103,8 +103,8 @@ const { thought, blog, hasMore } = Astro.props;
     const MIN_FILL = 48;
     const MORE_URL = "/home-more/";
     const EXPAND_KEY = "home-channels-expanded";
-    const ENTER_MS = 400;
-    const STAGGER_MS = 70;
+    const EXIT_MS = 275; // collapse fade duration (cards + height-fill area)
+    const GUIDE_DELAY = 100; // height-fill area fades in shortly after the cards
 
     function isExpandedCached() {
         try {
@@ -272,18 +272,6 @@ const { thought, blog, hasMore } = Astro.props;
         );
     }
 
-    function scrollToTop() {
-        if (window.scrollY <= 1) return;
-
-        const reduce = window.matchMedia(
-            "(prefers-reduced-motion: reduce)",
-        ).matches;
-        window.scrollTo({
-            top: 0,
-            behavior: reduce ? "auto" : "smooth",
-        });
-    }
-
     async function expandChannels(
         root: HTMLElement,
         btn: HTMLButtonElement,
@@ -342,14 +330,10 @@ const { thought, blog, hasMore } = Astro.props;
 
         root.dataset.loading = "1";
         setExpandedCached(false);
-        // Scroll back to top first: the fade-out keeps the extra cards in
-        // layout, so waiting until teardown would let the shrinking document
-        // height clamp the scroll position (causing a visible jump).
-        scrollToTop();
-        const collapseBtn = root.querySelector<HTMLButtonElement>(
-            "[data-channel-collapse]",
-        );
-        if (collapseBtn) collapseBtn.disabled = true;
+
+        const reduce = window.matchMedia(
+            "(prefers-reduced-motion: reduce)",
+        ).matches;
 
         const slots = [
             ...root.querySelectorAll<HTMLElement>("[data-channel-more]"),
@@ -358,41 +342,42 @@ const { thought, blog, hasMore } = Astro.props;
             ...slot.children,
         ]) as HTMLElement[];
 
-        const reduce = window.matchMedia(
-            "(prefers-reduced-motion: reduce)",
-        ).matches;
-
         const teardown = () => {
-            const guides = root.querySelector<HTMLElement>(
-                "[data-channel-guides]",
-            );
             slots.forEach((slot) => slot.replaceChildren());
             root.classList.remove("is-expanded");
             delete root.dataset.loading;
             syncChannelFill(root);
-            // Reveal the height-fill area in its collapsed size with a fade —
-            // same easing and duration as the card fades.
-            if (guides && !reduce) {
-                guides.animate([{ opacity: 0 }, { opacity: 1 }], {
-                    duration: ENTER_MS,
-                    easing: "cubic-bezier(0.22, 1, 0.36, 1)",
-                });
-            }
         };
+
+        // Scroll back to the top while the extra cards stay in layout, so
+        // the document height stays stable (no clamped jump).
+        if (window.scrollY > 1) {
+            window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+        }
 
         if (reduce || cards.length === 0) {
             teardown();
             return;
         }
 
-        cards.forEach((card, i) => {
-            card.style.setProperty("--exit-i", String(i));
+        // Cards fade out together (no stagger) in parallel with the scroll.
+        cards.forEach((card) => {
             card.classList.add("card-exit");
         });
 
-        // Teardown once the fade-out has finished (with a small buffer).
-        const dur = ENTER_MS + (cards.length - 1) * STAGGER_MS;
-        window.setTimeout(teardown, dur + 120);
+        // Once the cards have faded, collapse the columns and fade the
+        // height-fill area in — it is in place by then, so the fade is
+        // actually visible.
+        const guides = root.querySelector<HTMLElement>("[data-channel-guides]");
+        window.setTimeout(() => {
+            teardown();
+            if (guides) {
+                guides.animate([{ opacity: 0 }, { opacity: 1 }], {
+                    duration: EXIT_MS,
+                    easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+                });
+            }
+        }, EXIT_MS + GUIDE_DELAY);
     }
 
     const observeByRoot = new WeakMap<HTMLElement, () => void>();
