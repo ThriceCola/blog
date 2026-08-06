@@ -100,7 +100,6 @@ const { thought, blog, hasMore } = Astro.props;
     }
 
     const DESKTOP_MQ = "(min-width: 801px)";
-    const MIN_FILL = 48;
     const MORE_URL = "/home-more/";
     const EXPAND_KEY = "home-channels-expanded";
     const EXIT_MS = 275; // collapse fade duration (cards + height-fill area)
@@ -229,6 +228,81 @@ const { thought, blog, hasMore } = Astro.props;
         return { shortCol, fill: Math.abs(h0 - h1) - gap };
     }
 
+    // Natural heights of the guides content, measured at runtime so font
+    // scaling and theme tweaks don't break the layout math.
+    function guidesMetrics(guides: HTMLElement) {
+        const cards = guides.querySelector<HTMLElement>(
+            ".channel-guides__cards",
+        );
+        const action = guides.querySelector<HTMLElement>(
+            ".channel-guides__action",
+        );
+        const gap = parseFloat(getComputedStyle(guides).gap) || 0;
+        // Compact split-bar natural height — the in-gap layout with the nav
+        // cards stacked on the left (碎碎念 above 文章).
+        guides.classList.add("is-compact");
+        const barH = guides.offsetHeight;
+        guides.classList.remove("is-compact");
+        // Parked bar natural height — full-width below the grid with the
+        // nav cards side by side. Used when the gap is too tight for the
+        // split bar.
+        guides.classList.add("is-compact", "is-parked");
+        const parkedH = guides.offsetHeight;
+        guides.classList.remove("is-compact", "is-parked");
+        // Compressed chip natural height — the flat nav card used once the
+        // gap is too small for the roomy stacked layout.
+        guides.classList.add("is-tight");
+        const chipH = cards?.firstElementChild
+            ? (cards.firstElementChild as HTMLElement).offsetHeight
+            : 0;
+        guides.classList.remove("is-tight");
+        // The action is flex: 0 0 auto, so its offsetHeight is the natural
+        // height of whichever toggle (expand / collapse) is currently shown.
+        const toggleH = action ? action.offsetHeight : 0;
+        // Nav cards are never stretched (only their wrapping grid is), so the
+        // natural height comes from the text lines + gap + padding + border.
+        let cardsH = 0;
+        const card = cards?.firstElementChild as HTMLElement | null;
+        if (card) {
+            const cs = getComputedStyle(card);
+            const strong = card.querySelector("strong");
+            const span = card.querySelector("span");
+            cardsH =
+                (strong?.offsetHeight ?? 0) +
+                (span?.offsetHeight ?? 0) +
+                (parseFloat(cs.gap) || 0) +
+                parseFloat(cs.paddingTop) +
+                parseFloat(cs.paddingBottom) +
+                parseFloat(cs.borderTopWidth) +
+                parseFloat(cs.borderBottomWidth);
+        }
+        return { cardsH, toggleH, barH, parkedH, chipH, gap };
+    }
+
+    function setGuidesHeight(guides: HTMLElement, px: number) {
+        guides.style.height = `${px}px`;
+        guides.style.minHeight = `${px}px`;
+    }
+
+    // Nav cards lay out horizontally by default in the compact bar; once
+    // they are stretched tall enough to hold title + description stacked,
+    // switch them to a vertical, centered layout instead.
+    function syncEntryLayout(cards: HTMLElement | null) {
+        if (!cards) return;
+        const card = cards.firstElementChild as HTMLElement | null;
+        if (!card) return;
+        const strong = card.querySelector("strong");
+        const span = card.querySelector("span");
+        const cs = getComputedStyle(card);
+        const pad =
+            (parseFloat(cs.paddingTop) || 0) +
+            (parseFloat(cs.paddingBottom) || 0);
+        const gap = parseFloat(cs.gap) || 0;
+        const need =
+            (strong?.offsetHeight ?? 0) + (span?.offsetHeight ?? 0) + gap;
+        cards.classList.toggle("is-vertical", card.clientHeight - pad >= need);
+    }
+
     function syncChannelFill(root: HTMLElement) {
         if (!window.matchMedia(DESKTOP_MQ).matches) {
             hideGuides(root);
@@ -239,6 +313,25 @@ const { thought, blog, hasMore } = Astro.props;
         if (!guides) return;
 
         parkGuides(root);
+        guides.classList.remove(
+            "is-compact",
+            "is-parked",
+            "is-tight",
+            "is-stacked",
+            "is-fill-left",
+            "is-fill-right",
+        );
+        const fillCards = guides.querySelector<HTMLElement>(
+            ".channel-guides__cards",
+        );
+        const fillAction = guides.querySelector<HTMLElement>(
+            ".channel-guides__action",
+        );
+        if (fillCards) {
+            fillCards.style.height = "";
+            fillCards.classList.remove("is-vertical");
+        }
+        if (fillAction) fillAction.style.height = "";
         hideExpands(root);
         hideCollapse(root);
 
@@ -249,12 +342,49 @@ const { thought, blog, hasMore } = Astro.props;
         result.shortCol.insertBefore(guides, foot);
         guides.hidden = false;
 
-        if (result.fill >= MIN_FILL) {
-            guides.style.height = `${result.fill}px`;
-            guides.style.minHeight = `${result.fill}px`;
+        // Show the correct toggle first so its height is measurable.
+        syncToggle(root);
+
+        const { cardsH, toggleH, barH, parkedH, chipH, gap } =
+            guidesMetrics(guides);
+        const fullH = cardsH + gap + toggleH;
+        const chipFullH = chipH + gap + toggleH;
+
+        if (result.fill >= fullH) {
+            // Enough room to stack: nav cards stretch to absorb the slack and
+            // the toggle sits under them, balancing the columns (unchanged).
+            setGuidesHeight(guides, result.fill);
+            return;
         }
 
-        syncToggle(root);
+        // Roomier stack won't fit, but the compressed chips + toggle still
+        // stack inside the gap: keep the stacked arrangement and let the nav
+        // cards compress — flat chips, or vertical again once they are tall
+        // enough (syncEntryLayout).
+        if (result.fill >= chipFullH) {
+            guides.classList.add("is-tight");
+            setGuidesHeight(guides, result.fill);
+            if (fillCards) syncEntryLayout(fillCards);
+            return;
+        }
+
+        // Only when even chips can't stack does the bar split side-by-side.
+        // When the gap is tall enough for the stacked nav-card pair it stays
+        // inside the short column and fills the gap exactly (its top meets
+        // the gap top, its bottom the taller column's): nav cards stacked on
+        // the left, toggle stretched on the right. When the gap is too tight
+        // for that pair — or the columns are already level — the bar parks
+        // below the grid at its natural height as a full-width bar with the
+        // nav cards side by side.
+        guides.classList.add("is-compact");
+        if (result.fill >= barH) {
+            setGuidesHeight(guides, result.fill);
+            if (fillCards) syncEntryLayout(fillCards);
+        } else {
+            guides.classList.add("is-parked");
+            root.appendChild(guides);
+            setGuidesHeight(guides, parkedH);
+        }
     }
 
     function syncHomeChannels(root: HTMLElement) {

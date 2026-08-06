@@ -67,6 +67,116 @@ main.home-main {
     min-height: 0;
 }
 
+/* Gap smaller than the roomy stack (cards + toggle): while the compressed
+   chips + toggle still fit stacked the layout stays stacked and the nav
+   cards compress (is-tight); when that doesn't fit, the bar splits
+   side-by-side — nav cards on the left, toggle stretched on the right
+   (is-compact). When the gap is tall enough for the stacked card pair the
+   bar stays inside the short column and fills the gap exactly (its top
+   meets the gap top, its bottom the taller column's), so the column
+   bottoms stay level: the cards stack vertically (碎碎念 above 文章) and
+   the toggle fills the gap height. When the gap is too tight for that pair
+   — or the columns are already level — there is nothing to fill, so the
+   bar parks below the grid at its natural height as a full-width bar with
+   the nav cards side by side (is-parked). */
+.channel-guides.is-compact {
+    grid-column: 1 / -1;
+    /* parked case: spans both grid columns */
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 1.5em;
+}
+
+/* Both bar variants: the toggle area stretches and the button fills it
+   with centered text. */
+.channel-guides.is-compact .channel-guides__action {
+    display: flex;
+    align-items: stretch;
+}
+
+.channel-guides.is-compact .channel-toggle {
+    flex: 1 1 auto;
+}
+
+/* In-gap split: the two nav cards stack vertically in the left half
+   (碎碎念 above 文章), each stretching to half the bar height so the
+   pair's bottom meets the toggle's. */
+.channel-guides.is-compact:not(.is-parked) .channel-guides__cards {
+    min-width: 0;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+}
+
+/* Parked bar: the nav cards sit side by side, each keeping its
+   description. */
+.channel-guides.is-compact.is-parked .channel-guides__cards {
+    min-width: 0;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr;
+}
+
+/* Compressed nav cards (flat chips): title + description in a row,
+   centered, ellipsized when narrow. The stacked-compressed bar (is-tight)
+   and the parked bar keep comfortable padding; the in-gap split bar fits
+   the gap exactly, so its chips use a smaller font and slim padding. */
+.channel-guides.is-tight .channel-guides__cards {
+    min-width: 0;
+}
+
+.channel-guides.is-tight .channel-guides__cards>.entry-card,
+.channel-guides.is-compact.is-parked .channel-guides__cards>.entry-card {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    padding: 8px 12px;
+    overflow: hidden;
+}
+
+.channel-guides.is-compact:not(.is-parked) .channel-guides__cards>.entry-card {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    padding: 2px 8px;
+    overflow: hidden;
+}
+
+/* Tall enough nav card (set from JS): stack title + description
+   vertically, centered, instead of side by side. */
+.channel-guides.is-tight .channel-guides__cards.is-vertical>.entry-card,
+.channel-guides.is-compact:not(.is-parked) .channel-guides__cards.is-vertical>.entry-card {
+    flex-direction: column;
+}
+
+.channel-guides.is-tight .entry-card strong,
+.channel-guides.is-compact.is-parked .entry-card strong {
+    font-size: 0.95em;
+    flex-shrink: 0;
+}
+
+.channel-guides.is-compact:not(.is-parked) .entry-card strong {
+    font-size: 0.9em;
+    flex-shrink: 0;
+}
+
+.channel-guides.is-tight .entry-card span,
+.channel-guides.is-compact.is-parked .entry-card span {
+    font-size: 0.85em;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.channel-guides.is-compact:not(.is-parked) .entry-card span {
+    font-size: 0.8em;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .channel-guides__cards {
     flex: 1 1 auto;
     display: grid;
@@ -76,7 +186,7 @@ main.home-main {
     min-height: 0;
 }
 
-.channel-guides__cards > .entry-card {
+.channel-guides__cards>.entry-card {
     height: 100%;
     min-height: 0;
     justify-content: center;
