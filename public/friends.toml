@@ -36,3 +36,9 @@ url = "https://www.zellon.top/"
 avatar = "https://www.zellon.top/avatar.jpg"
 description = "告别过去，是为了走向未来"
 rss = "https://www.zellon.top/rss.xml"
+
+[yunshen]
+name = "云深不知处"
+url = "https://yunshen.life"
+avatar = "https://avatars.githubusercontent.com/u/168275411?s=96&v=4"
+description = "云深的碎碎念"
