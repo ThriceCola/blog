@@ -571,6 +571,206 @@ textarea {
     overflow: hidden;
 }
 
+/* Horizontal click-to-switch strip. In Markdown, keep <img> tags inside
+   with no blank lines — a blank line ends the HTML block.
+   <div class="slides"><img src="…" alt=""><img src="…" alt=""></div> */
+.slides {
+    --slides-peek: 40px;
+    position: relative;
+    margin: 1.5em 0;
+    background: transparent;
+}
+
+.slides::-webkit-scrollbar {
+    display: none;
+}
+
+.slides > * {
+    flex: 0 0 100%;
+    width: 100%;
+    min-width: 0;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+}
+
+.slides[data-ready] {
+    display: block;
+    overflow: visible;
+    scroll-snap-type: none;
+}
+
+.slides-stage {
+    position: relative;
+    width: 100%;
+}
+
+.slides-track {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-inline: var(--slides-peek);
+    scroll-padding-inline: var(--slides-peek);
+    -webkit-mask-image: linear-gradient(
+        to right,
+        transparent,
+        #000 var(--slides-peek),
+        #000 calc(100% - var(--slides-peek)),
+        transparent
+    );
+    mask-image: linear-gradient(
+        to right,
+        transparent,
+        #000 var(--slides-peek),
+        #000 calc(100% - var(--slides-peek)),
+        transparent
+    );
+}
+
+.slides-track::-webkit-scrollbar {
+    display: none;
+}
+
+.slides-track > * {
+    flex: 0 0 100%;
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+}
+
+.slides-edge {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: var(--slides-peek);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+.slides-edge-prev {
+    left: 0;
+}
+
+.slides-edge-next {
+    right: 0;
+}
+
+.slides-edge[hidden] {
+    display: none;
+}
+
+.slides-track img,
+.slides-track [data-astro-lqip] {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: 70vh;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    object-fit: contain;
+    object-position: center;
+}
+
+.slides-track [data-astro-lqip] {
+    display: inline-block;
+    width: fit-content;
+    max-width: 100%;
+    max-height: none;
+}
+
+.prose .slides-track img {
+    opacity: 1;
+    transition: none;
+}
+
+.prose .slides-track [data-astro-lqip] img {
+    opacity: 0;
+    transition: opacity 0.4s ease-out;
+}
+
+.prose .slides-track [data-astro-lqip] img.loaded {
+    opacity: 1;
+}
+
+.slides-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 0.75em;
+    padding: 6px 8px;
+    border: 1px solid var(--semi-accent-color);
+    background: var(--background-color);
+    box-shadow: -6px 8px 2px 1px var(--shadow-color);
+}
+
+.slides > .slides-bar {
+    width: auto;
+    margin-inline: var(--slides-peek);
+}
+
+.slides-btn {
+    width: 36px;
+    height: 32px;
+    flex: 0 0 auto;
+    color: var(--semi-accent-color);
+}
+
+.slides-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.slides-btn:focus-visible {
+    outline: 1px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+.slides-dots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.slides-dot {
+    width: 10px;
+    height: 10px;
+    padding: 0;
+    border: 1px solid var(--semi-accent-color);
+    background: transparent;
+    cursor: pointer;
+}
+
+.slides-dot.is-active {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.slides-dot:focus-visible {
+    outline: 1px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .slides,
+    .slides-track {
+        scroll-behavior: auto;
+    }
+}
+
 /* Utility */
 .sr-only {
     border: 0;

@@ -92,6 +92,258 @@ const { title, description } = Astro.props;
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image" />
 
+<script>
+    const CHEVRON = {
+        left: '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M10.5 3 L5.5 8 l5 5" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
+        right: '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M5.5 3 L10.5 8 l-5 5" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
+    };
+
+    function initSlides() {
+        document.querySelectorAll(".slides").forEach((root) => {
+            if (!(root instanceof HTMLElement) || root.dataset.ready) return;
+            const items = [...root.children].filter(
+                (el) =>
+                    !el.classList.contains("slides-track") &&
+                    !el.classList.contains("slides-bar"),
+            );
+            if (items.length < 2) return;
+
+            const track = document.createElement("div");
+            track.className = "slides-track";
+
+            const slides = items.map((el) => {
+                const slide = document.createElement("div");
+                slide.className = "slides-item";
+                slide.appendChild(el);
+                return slide;
+            });
+            track.append(...slides);
+
+            const stage = document.createElement("div");
+            stage.className = "slides-stage";
+
+            const edgePrev = document.createElement("button");
+            edgePrev.type = "button";
+            edgePrev.className = "slides-edge slides-edge-prev";
+            edgePrev.tabIndex = -1;
+            edgePrev.setAttribute("aria-hidden", "true");
+
+            const edgeNext = document.createElement("button");
+            edgeNext.type = "button";
+            edgeNext.className = "slides-edge slides-edge-next";
+            edgeNext.tabIndex = -1;
+            edgeNext.setAttribute("aria-hidden", "true");
+
+            stage.append(track, edgePrev, edgeNext);
+
+            const prev = document.createElement("button");
+            prev.type = "button";
+            prev.className = "btn-ghost slides-btn slides-prev";
+            prev.setAttribute("aria-label", "上一张");
+            prev.innerHTML = CHEVRON.left;
+
+            const next = document.createElement("button");
+            next.type = "button";
+            next.className = "btn-ghost slides-btn slides-next";
+            next.setAttribute("aria-label", "下一张");
+            next.innerHTML = CHEVRON.right;
+
+            const dots = document.createElement("div");
+            dots.className = "slides-dots";
+
+            const bar = document.createElement("div");
+            bar.className = "slides-bar";
+            bar.append(prev, dots, next);
+
+            root.replaceChildren(stage, bar);
+            root.dataset.ready = "1";
+            root.setAttribute("role", "region");
+            root.setAttribute("aria-label", "横向切换");
+
+            const last = items.length - 1;
+
+            function scrollLeftFor(index) {
+                const item = track.children[index];
+                const first = track.children[0];
+                if (
+                    !(item instanceof HTMLElement) ||
+                    !(first instanceof HTMLElement)
+                ) {
+                    return 0;
+                }
+                return item.offsetLeft - first.offsetLeft;
+            }
+
+            function scrollIndex() {
+                let best = 0;
+                let bestDist = Infinity;
+                for (let i = 0; i < track.children.length; i++) {
+                    const dist = Math.abs(track.scrollLeft - scrollLeftFor(i));
+                    if (dist < bestDist) {
+                        best = i;
+                        bestDist = dist;
+                    }
+                }
+                return best;
+            }
+
+            let cursor = 0;
+            let animating = false;
+            let scrollAnim = 0;
+            let releaseTimer = 0;
+
+            function sync() {
+                const index = cursor;
+                edgePrev.hidden = index <= 0;
+                edgeNext.hidden = index >= last;
+                [...dots.children].forEach((dot, i) => {
+                    const on = i === index;
+                    dot.classList.toggle("is-active", on);
+                    dot.setAttribute("aria-current", on ? "true" : "false");
+                });
+                [...slides].forEach((slide, i) => {
+                    slide.classList.toggle("is-current", i === index);
+                });
+            }
+
+            function scrollToScrollIndex(index, behavior) {
+                cursor = index;
+                window.cancelAnimationFrame(scrollAnim);
+                window.clearTimeout(releaseTimer);
+                const left = scrollLeftFor(index);
+                const instant =
+                    behavior === "auto" ||
+                    window.matchMedia("(prefers-reduced-motion: reduce)")
+                        .matches;
+                sync();
+                track.style.scrollSnapType = "none";
+                if (instant) {
+                    jumping = true;
+                    track.scrollLeft = left;
+                    track.style.scrollSnapType = "";
+                    jumping = false;
+                    normalize();
+                    releaseTimer = window.setTimeout(() => {
+                        animating = false;
+                    }, 90);
+                    return;
+                }
+                const from = track.scrollLeft;
+                const change = left - from;
+                const duration = 250;
+                const started = performance.now();
+                jumping = true;
+                const frame = (now) => {
+                    const progress = Math.min(1, (now - started) / duration);
+                    const eased = 1 - (1 - progress) ** 3;
+                    track.scrollLeft = from + change * eased;
+                    if (progress < 1) {
+                        scrollAnim = requestAnimationFrame(frame);
+                        return;
+                    }
+                    track.scrollLeft = left;
+                    track.style.scrollSnapType = "";
+                    jumping = false;
+                    animating = false;
+                    normalize();
+                    sync();
+                };
+                scrollAnim = requestAnimationFrame(frame);
+            }
+
+            let jumping = false;
+            function normalize() {
+                if (jumping) return;
+                cursor = scrollIndex();
+                sync();
+            }
+
+            function step(delta) {
+                let next = cursor + delta;
+                if (delta > 0 && cursor >= last) next = 0;
+                if (delta < 0 && cursor <= 0) next = last;
+                const reduced = window.matchMedia(
+                    "(prefers-reduced-motion: reduce)",
+                ).matches;
+                scrollToScrollIndex(next, animating || reduced ? "auto" : "smooth");
+                animating = true;
+            }
+
+            items.forEach((_, i) => {
+                const dot = document.createElement("button");
+                dot.type = "button";
+                dot.className = "slides-dot";
+                dot.setAttribute("aria-label", `第 ${i + 1} 张`);
+                dot.addEventListener("click", () => {
+                    scrollToScrollIndex(i, animating ? "auto" : "smooth");
+                    animating = true;
+                });
+                dots.appendChild(dot);
+            });
+
+            let settleTimer = 0;
+            let placed = false;
+            function placeStart() {
+                placed = true;
+                cursor = 0;
+                sync();
+            }
+            function warmImages() {
+                for (const img of track.querySelectorAll("img")) {
+                    if (!(img instanceof HTMLImageElement)) continue;
+                    img.loading = "eager";
+                    const show = () => img.classList.add("loaded");
+                    if (img.complete && img.naturalWidth) show();
+                    else img.addEventListener("load", show, { once: true });
+                    img.decode?.()
+                        .then(show)
+                        .catch(() => {});
+                }
+            }
+            prev.addEventListener("click", () => step(-1));
+            next.addEventListener("click", () => step(1));
+            edgePrev.addEventListener("click", () => step(-1));
+            edgeNext.addEventListener("click", () => step(1));
+            track.addEventListener(
+                "scroll",
+                () => {
+                    if (!placed || jumping) return;
+                    sync();
+                    window.clearTimeout(settleTimer);
+                    settleTimer = window.setTimeout(finishScroll, 140);
+                },
+                { passive: true },
+            );
+            track.addEventListener("scrollend", finishScroll);
+            function finishScroll() {
+                if (!placed) return;
+                normalize();
+                animating = false;
+                stage.classList.remove("is-scrolling");
+                sync();
+            }
+            root.addEventListener("keydown", (event) => {
+                if (event.key === "ArrowLeft") {
+                    event.preventDefault();
+                    step(-1);
+                } else if (event.key === "ArrowRight") {
+                    event.preventDefault();
+                    step(1);
+                }
+            });
+
+            warmImages();
+            placeStart();
+        });
+    }
+
+    initSlides();
+    if (!window.__slidesInit) {
+        window.__slidesInit = true;
+        document.addEventListener("astro:page-load", initSlides);
+    }
+</script>
+
 <style is:global>
     /* ---- Fast crossfade (LoadingBar handles the visual feedback) ---- */
     ::view-transition-group(*) {

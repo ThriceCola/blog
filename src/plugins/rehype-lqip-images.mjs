@@ -1,4 +1,5 @@
 // @ts-check
+import { fromHtml } from "hast-util-from-html";
 import { getPlaiceholder } from "plaiceholder";
 import { visit } from "unist-util-visit";
 
@@ -44,6 +45,29 @@ export default function rehypeLqipImages() {
   const lqipCache = new Map();
 
   return async (tree) => {
+    // Raw HTML blocks (for example <div class="slides"><img>) are still
+    // unparsed here, because this plugin runs before rehype-raw.
+    /** @type {Array<{node: any, index: number, parent: any}>} */
+    const raws = [];
+    visit(tree, "raw", (node, index, parent) => {
+      if (index === undefined || !parent) return;
+      if (!String(node.value).includes("<img")) return;
+      raws.push({ node, index, parent });
+    });
+    const rawsByParent = new Map();
+    for (const raw of raws) {
+      const list = rawsByParent.get(raw.parent) ?? [];
+      list.push(raw);
+      rawsByParent.set(raw.parent, list);
+    }
+    for (const [parent, list] of rawsByParent) {
+      list.sort((a, b) => b.index - a.index);
+      for (const { node, index } of list) {
+        const fragment = fromHtml(String(node.value), { fragment: true });
+        parent.children.splice(index, 1, ...fragment.children);
+      }
+    }
+
     /** @type {Array<{node: any, index: number | undefined, parent: any, src: string}>} */
     const tasks = [];
 
@@ -60,10 +84,14 @@ export default function rehypeLqipImages() {
     // Generate LQIPs (deduped by URL), collecting dimensions
     const results = await Promise.all(
       tasks.map(async (t) => {
-        if (!lqipCache.has(t.src)) {
-          lqipCache.set(t.src, generateLQIP(t.src));
+        let pending = lqipCache.get(t.src);
+        if (!pending) {
+          pending = generateLQIP(t.src);
+          lqipCache.set(t.src, pending);
         }
-        return { task: t, data: await lqipCache.get(t.src) };
+        const data = await pending;
+        if (!data) lqipCache.delete(t.src);
+        return { task: t, data };
       }),
     );
 

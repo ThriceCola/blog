@@ -1,6 +1,6 @@
 ---
 title: '抓包屏幕挂灯，制作PC软件，最棒的拾音功能'
-description: '抓取我的屏幕挂灯蓝牙协议，并制作PC直连软件，还有最棒的拾音功能'
+description: '手上的屏幕挂灯怎么只有一个不好用的app，那我只能去修改它让它变得更好了，我需要抓取它的蓝牙协议，制作PC直连软件，还有最棒的拾音功能'
 pubDate: '2026-10-19'
 cardImage: 'https://blog-img.thricecola.com/hi-my-light/cani-on-my-light.jpg'
 cardImagePosition: 'center 10%'
@@ -28,16 +28,15 @@ cardImagePosition: 'center 10%'
 
 最开始是今年，也就是26年1月份月初，我开始寻找破解抓包之道，我对蓝牙协议只停留在大致理解工作方式。所以我通过搜索知道了如何使用 wireshark 查看蓝牙协议抓包 log 。
 
-## 第一步是 Log 从何处来。
+## 第一步是 Log 从何处来
 
-采用手上一部已经 Root 的安卓手机，通过开发者选项打开`打开蓝牙数据包日志`，该选项会在蓝牙开启的一刻开始抓取包，并在关闭蓝牙时结束本次的抓包。为什么需要 Root 呢，原因是小米手机将蓝牙日志放在了非 Root 不可访问的路径
-`/data/misc/bluetooth/logs/`，在这里可以找到 `btsnoop_hci_*.log`
+采用手上一部已经 Root 的安卓手机，通过开发者选项打开`打开蓝牙数据包日志`，该选项会在蓝牙开启的一刻开始抓取包，并在关闭蓝牙时结束本次的抓包。为什么需要 Root 呢，原因是小米手机将蓝牙日志放在了非 Root 不可访问的路径 `/data/misc/bluetooth/logs/`，在这里可以找到 `btsnoop_hci_*.log`。
 
 在蓝牙开启后，打开自带的控制软件，将需要的功能操作后，关掉蓝牙。取出 `btsnoop_hci_*.log` 提取到电脑扔入 wireshark 。
 
-具体是如何在 wireshark 里筛选出该控制包的，我已经忘了详细，毕竟我只是兴趣使然。不过大致路程是我使用了安卓上的 nRF Connect 去连接设备，寻找到了控制该设备的特征值，并通过 wireshark 筛选设备码与通讯类型还有该特征值。
+具体是如何在 wireshark 里筛选出该控制包的，我已经忘了详细，毕竟我只是兴趣使然。不过大致路程是使用了安卓上的 nRF Connect 去连接设备，寻找到了控制该设备的特征值，并通过 wireshark 筛选设备码与通讯类型还有该特征值。
 
-一一对比不同控制的蓝牙传输报文，发现 `开灯` `关灯` 仅在一处二进制里出现了差异
+一一对比不同控制的蓝牙传输报文，发现 `开灯` `关灯` 仅在一处二进制里出现了差异。
 
 > 很抱歉由于时间久远我这里没有保存着图片...
 
@@ -49,9 +48,9 @@ cardImagePosition: 'center 10%'
 
 现在 AI/LLM 将开发速度指数型上涨了，如这个抓包按照原先人工预期，由我来弄，需要大半个月的工期，直接震撼瘫坐得变成了 8 小时。
 
-> 我的拖延症让我1月份到8月份都没有尝试去实现当时还处于设想里的 `抓包屏幕挂灯，制作PC软件，最棒的拾音功能`，我去玩其它东西去了。
-
 等到了5、6月，DeepSeek V4 将 AI/LLM 的价格打到最低点。我开始了我的全新抓包之旅，毕竟原先枯燥的抓包要花费我好几个星期的周末，化成了只需要一天。
+
+> 我的拖延症让我1月份到8月份都没有尝试去实现当时还处于设想里的 `抓包屏幕挂灯，制作PC软件，最棒的拾音功能`，去玩其它东西去了。
 
 ## 采用全新 AI/LLM 抓包
 
@@ -89,8 +88,33 @@ cardImagePosition: 'center 10%'
 
 # 软件
 
-在准备工作做好后，开始
+在前期准备工作做好后，开始软件制作吧。
 
-## 首先是后端
+## 最性能的架构
 
-后端必须最性能，为什么呢，
+后端必须最性能，为什么呢，因为在刷B站的时候，我可是看到过这个视频：
+
+> 现实中声音总是比画面慢，所以视频声音迟了可以接受。但是反过来，声音跑到前头就不对了，大脑在现实中没见过，立刻就会警觉。
+> 
+> 来源：[音画不同步！为什么视频口型总是怪怪的？点击播放](https://www.bilibili.com/video/BV1A2bi6UEev/)
+
+既然我们后续要做的拾音功能，按照物理规律怎么都是电脑先发出声音再激活音效，那么我们就要用最快的速度处理识别声音并发出光效。
+
+果断选择了神奇的 Rust，不仅仅是后端，前端我也想用 Rust 写。
+
+作为一个及时使用的软件，在后台运行的软件，想要点击即用的绿色软件，那么使用非 Web 技术是很重要的。
+
+那么前端就来使用 GPUI 吧。这是一个还没长大的小屁孩 Rust 界面库，但是足够强大。
+
+请看整体软件架构图：
+
+![architecture-diagram.png](https://blog-img.thricecola.com/hi-my-light/architecture-diagram.png)
+
+预期上，在收到更变信号后到灯的延迟不会超过 5ms，这也是为后面接下来要做的最重要的**拾音功能**做准备
+
+
+<div class="slides">
+<img src="https://blog-img.thricecola.com/hi-my-light/HML-home.png" alt="HML-home.png">
+<img src="https://blog-img.thricecola.com/hi-my-light/light-color-intrigue.gif" alt="light-color-intrigue.gif">
+<img src="https://blog-img.thricecola.com/hi-my-light/HML-back-color.png" alt="HML-back-color.png">
+</div>
