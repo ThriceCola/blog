@@ -211,7 +211,7 @@ BeatNet 是一个从音频中识别节拍的模型，最关键是拥有实时模
 # 致谢
 
 - **我的朋友 CJQ**
-- **77 的螃蟹拼豆**
+- **77 的螃蟹**
 - [GPUI](https://gpui.rs/)
 - [Wireshark](https://www.wireshark.org/)
 - [nRF Connect for Mobile](https://www.nordicsemi.com/Products/Development-tools/nRF-Connect-for-mobile)
