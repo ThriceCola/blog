@@ -5,6 +5,7 @@ import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
 import LoadingBar from "../components/LoadingBar.astro";
 import HomeChannels from "../components/home/HomeChannels.astro";
+import HomeFeed from "../components/home/HomeFeed.astro";
 import { ClientRouter } from "astro:transitions";
 import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
 import "../styles/home.css";
@@ -37,6 +38,7 @@ const thoughts = (await getCollection("thoughts")).sort(
                 blog={blogs[0]}
                 hasMore={blogs.length > 1 || thoughts.length > 1}
             />
+            <HomeFeed thoughts={thoughts} blogs={blogs} />
         </main>
         <Footer />
         <script>

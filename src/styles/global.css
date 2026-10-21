@@ -213,6 +213,12 @@ img {
     background: var(--shadow-color);
 }
 
+video {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
 /* astro-lqip: put the LQIP ::after ON TOP (z-index: 2) so it renders
    above the <img> (which has opacity:0 during loading). Without this,
    some browsers skip rendering the ::after behind a higher-z-index img.
@@ -797,7 +803,7 @@ main {
 
 @media (max-width: 720px) {
     body {
-        font-size: 15px;
+        font-size: 16px;
     }
 
     main {
@@ -808,16 +814,20 @@ main {
         margin-bottom: 1.5em;
     }
 
+    p {
+        font-size: 17px;
+    }
+
     h1 {
-        font-size: 22px;
+        font-size: 23px;
     }
 
     h2 {
-        font-size: 19px;
+        font-size: 20px;
     }
 
     h3 {
-        font-size: 16px;
+        font-size: 17px;
     }
 
     pre {
@@ -837,7 +847,7 @@ main {
 
 @media (max-width: 480px) {
     body {
-        font-size: 14px;
+        font-size: 15px;
     }
 
     main {
@@ -853,15 +863,15 @@ main {
     }
 
     h1 {
-        font-size: 20px;
+        font-size: 21px;
     }
 
     h2 {
-        font-size: 17px;
+        font-size: 18px;
     }
 
     h3 {
-        font-size: 15px;
+        font-size: 16px;
     }
 
     pre {

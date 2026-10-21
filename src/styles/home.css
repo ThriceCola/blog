@@ -29,6 +29,38 @@ main.home-main {
     margin: 0 auto;
 }
 
+/* Mobile-only chronological feed: latest 3 thoughts + latest 3 posts */
+.home-feed {
+    display: none;
+    flex-direction: column;
+    gap: 1.25em;
+}
+
+.home-feed__end {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75em;
+}
+
+.home-feed [data-feed-top] {
+    width: 100%;
+}
+
+.home-feed__hint {
+    margin: 0;
+    text-align: center;
+    font-size: 1.05em;
+    color: var(--semi-accent-color);
+}
+
+button.entry-card {
+    margin: 0;
+    font: inherit;
+    cursor: pointer;
+    color: inherit;
+    background-color: var(--background-color);
+}
+
 /* Mobile-only entry cards */
 .home-entries {
     display: none;
@@ -392,17 +424,11 @@ a.channel__title:visited {
     }
 
     .home-channels {
-        grid-template-columns: 1fr;
-        column-gap: 1.5em;
-        row-gap: 1.5em;
-    }
-
-    .channel-col__head {
         display: none;
     }
 
-    .channel-col__foot {
-        display: block;
+    .home-feed {
+        display: flex;
     }
 
     .channel__label {
@@ -411,12 +437,6 @@ a.channel__title:visited {
 
     .channel__latest {
         display: none;
-    }
-
-    /* Mobile: one card each, no expand / collapse / guides / loaded extras */
-    .channel-guides,
-    [data-channel-more] {
-        display: none !important;
     }
 }
 

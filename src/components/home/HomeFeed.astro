@@ -1,0 +1,88 @@
+---
+import ThoughtChannelCard from "./ThoughtChannelCard.astro";
+import BlogChannelCard from "./BlogChannelCard.astro";
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+	thoughts: CollectionEntry<"thoughts">[];
+	blogs: CollectionEntry<"blog">[];
+}
+
+const { thoughts, blogs } = Astro.props;
+
+// Same cap as the desktop columns: latest 3 thoughts + latest 3 posts.
+const PER_CHANNEL = 3;
+
+type Item =
+	| {
+			kind: "thought";
+			date: number;
+			thought: CollectionEntry<"thoughts">;
+	  }
+	| {
+			kind: "blog";
+			date: number;
+			blog: CollectionEntry<"blog">;
+	  };
+
+const items: Item[] = [
+	...thoughts.slice(0, PER_CHANNEL).map((thought) => ({
+		kind: "thought" as const,
+		date: thought.data.pubDate.valueOf(),
+		thought,
+	})),
+	...blogs.slice(0, PER_CHANNEL).map((blog) => ({
+		kind: "blog" as const,
+		date: blog.data.pubDate.valueOf(),
+		blog,
+	})),
+].sort((a, b) => b.date - a.date);
+---
+
+<section class="home-feed" data-home-feed>
+	{
+		items.map((item) =>
+			item.kind === "thought" ? (
+				<ThoughtChannelCard thought={item.thought} />
+			) : (
+				<BlogChannelCard blog={item.blog} />
+			),
+		)
+	}
+	<div class="home-feed__end">
+		<button type="button" class="entry-card card card--hover" data-feed-top>
+			<strong>返回顶部</strong>
+		</button>
+		<p class="home-feed__hint">只展示6个，麻烦切换分页继续查看</p>
+	</div>
+</section>
+
+<script>
+	declare global {
+		interface Window {
+			__homeFeedTopInit?: boolean;
+		}
+	}
+
+	function initFeedTop() {
+		const root = document.querySelector<HTMLElement>("[data-home-feed]");
+		if (!root || root.dataset.topBound) return;
+		root.dataset.topBound = "1";
+		root.addEventListener("click", (event) => {
+			const btn = (event.target as HTMLElement | null)?.closest(
+				"[data-feed-top]",
+			);
+			if (!btn || !root.contains(btn)) return;
+			const reduce = window.matchMedia(
+				"(prefers-reduced-motion: reduce)",
+			).matches;
+			window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+		});
+	}
+
+	initFeedTop();
+	if (!window.__homeFeedTopInit) {
+		window.__homeFeedTopInit = true;
+		document.addEventListener("astro:page-load", initFeedTop);
+	}
+</script>
