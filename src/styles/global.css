@@ -356,22 +356,27 @@ textarea {
     object-fit: cover;
 }
 
-.channel__image img {
-    aspect-ratio: 16 / 9;
-}
-
 .hero-image img {
     aspect-ratio: 720 / 360;
 }
 
+/* The frame owns the box; the LQIP wrapper and the img both fill it.
+   An aspect-ratio on the img alone lets Chrome round the wrapper and
+   the bitmap a pixel apart, so the border misses the picture. */
 .post-image {
     flex-shrink: 0;
     width: 240px;
     height: 140px;
 }
 
+.channel__image {
+    aspect-ratio: 16 / 9;
+}
+
 .post-image [data-astro-lqip],
-.post-image img {
+.post-image img,
+.channel__image [data-astro-lqip],
+.channel__image img {
     height: 100%;
 }
 
