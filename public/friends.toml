@@ -26,9 +26,9 @@ rss = "https://www.lapis.cafe/rss.xml"
 [mikann_OMO]
 name = "mikann_OMO"
 url = "https://www.mikann.fun"
-avatar = "https://mikann.fun/avatar.webp"
+avatar = "https://www.mikann.fun/avatar.webp"
 description = "是一位超级无敌可爱美少女"
-rss = "https://mikann.fun/rss.xml"
+rss = "https://www.mikann.fun/rss.xml"
 
 [Zellon]
 name = "Zellon的博客"
