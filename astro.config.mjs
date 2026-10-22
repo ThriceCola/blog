@@ -4,6 +4,7 @@ import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import { defineConfig } from 'astro/config';
 
+import { unified } from '@astrojs/markdown-remark';
 import vue from '@astrojs/vue';
 import rehypeLqipImages from './src/plugins/rehype-lqip-images.mjs';
 
@@ -18,7 +19,9 @@ export default defineConfig({
     vue(),
   ],
   markdown: {
-    rehypePlugins: [rehypeLqipImages],
+    processor: unified({
+      rehypePlugins: [rehypeLqipImages],
+    }),
     shikiConfig: {
       themes: {
         light: 'github-light',

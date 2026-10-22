@@ -255,6 +255,20 @@ video {
     transition: none !important;
 }
 
+.thought-content img,
+.thought-body img,
+.prose img {
+    opacity: 0;
+    transition: opacity 0.5s ease-out;
+    background: var(--shadow-color);
+}
+
+.thought-content img.loaded,
+.thought-body img.loaded,
+.prose img.loaded {
+    opacity: 1;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
@@ -299,6 +313,74 @@ textarea {
 
 .card--hover:hover {
     box-shadow: -10px 12px 2px 1px var(--shadow-color);
+}
+
+.hidden-post {
+    display: none;
+}
+
+.feed-sentinel {
+    height: 1px;
+    width: 100%;
+}
+
+.feed-end {
+    text-align: center;
+    padding: 1.5em 0;
+    color: var(--semi-accent-color);
+    font-size: 0.9em;
+}
+
+.feed-end[hidden] {
+    display: none;
+}
+
+/* Bordered cover: the frame is ours, the picture fills it.
+   astro-lqip copies a class onto both its wrapper and the img,
+   so the border stays on this element. */
+.framed-image {
+    overflow: hidden;
+    border: 1px solid var(--semi-accent-color);
+    line-height: 0;
+}
+
+.framed-image [data-astro-lqip] {
+    display: block;
+    width: 100%;
+}
+
+.framed-image img {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+}
+
+.channel__image img {
+    aspect-ratio: 16 / 9;
+}
+
+.hero-image img {
+    aspect-ratio: 720 / 360;
+}
+
+.post-image {
+    flex-shrink: 0;
+    width: 240px;
+    height: 140px;
+}
+
+.post-image [data-astro-lqip],
+.post-image img {
+    height: 100%;
+}
+
+@media (max-width: 640px) {
+    .post-image {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 16 / 9;
+    }
 }
 
 /* Shared card entrance (home expand, infinite scroll) */
@@ -799,6 +881,10 @@ main {
     margin: auto;
     padding: 3em 1em;
     flex: 1;
+}
+
+main.layout-wide {
+    max-width: 960px;
 }
 
 @media (max-width: 720px) {

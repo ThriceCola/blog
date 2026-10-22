@@ -1,7 +1,6 @@
 /* Homepage layout */
 
 main.home-main {
-    max-width: 960px;
     padding-top: 1.5em;
 }
 
@@ -387,22 +386,6 @@ a.channel__title:visited {
 .channel__image {
     width: 100%;
     margin: 0 0 0.75em;
-    overflow: hidden;
-    border: 1px solid var(--semi-accent-color);
-    line-height: 0;
-}
-
-.channel__image [data-astro-lqip] {
-    display: block;
-    width: 100%;
-}
-
-.channel__image img {
-    display: block;
-    width: 100%;
-    height: auto;
-    aspect-ratio: 16 / 9;
-    object-fit: cover;
 }
 
 .channel__links {
@@ -417,16 +400,6 @@ a.channel__title:visited {
 
 .channel__links a:hover {
     opacity: 0.75;
-}
-
-.thought-content img {
-    opacity: 0;
-    transition: opacity 0.5s ease-out;
-    background: var(--shadow-color);
-}
-
-.thought-content img.loaded {
-    opacity: 1;
 }
 
 @media (max-width: 800px) {

@@ -1,21 +1,9 @@
 ---
-import BaseHead from "../components/BaseHead.astro";
-import Footer from "../components/Footer.astro";
-import Header from "../components/Header.astro";
-import LoadingBar from "../components/LoadingBar.astro";
 import FriendsList from "../components/FriendsList.vue";
-import { ClientRouter } from "astro:transitions";
+import Page from "../layouts/Page.astro";
 ---
 
-<!doctype html>
-<html lang="zh-CN">
-    <head>
-        <BaseHead
-            title="友链 — ThriceCola's Blog"
-            description="三瓶可乐不过岗的朋友们"
-        />
-        <ClientRouter />
-        <LoadingBar />
+<Page title="友链 — ThriceCola's Blog" description="三瓶可乐不过岗的朋友们">
         <style>
             .friends-guide {
                 margin-bottom: 2.5em;
@@ -44,10 +32,6 @@ import { ClientRouter } from "astro:transitions";
                 }
             }
         </style>
-    </head>
-    <body>
-        <Header />
-        <main>
             <div class="page-header">
                 <h1>友链</h1>
                 <p>一些有意思的朋友和站点</p>
@@ -73,7 +57,4 @@ rss = "https://blog.thricecola.com/rss.xml"</code></pre>
             </div>
 
             <FriendsList client:load />
-        </main>
-        <Footer />
-    </body>
-</html>
+</Page>

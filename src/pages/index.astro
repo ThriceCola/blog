@@ -1,12 +1,8 @@
 ---
 import { getCollection } from "astro:content";
-import BaseHead from "../components/BaseHead.astro";
-import Footer from "../components/Footer.astro";
-import Header from "../components/Header.astro";
-import LoadingBar from "../components/LoadingBar.astro";
 import HomeChannels from "../components/home/HomeChannels.astro";
 import HomeFeed from "../components/home/HomeFeed.astro";
-import { ClientRouter } from "astro:transitions";
+import Page from "../layouts/Page.astro";
 import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
 import "../styles/home.css";
 
@@ -18,102 +14,28 @@ const thoughts = (await getCollection("thoughts")).sort(
 );
 ---
 
-<!doctype html>
-<html lang="zh-CN">
-    <head>
-        <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-        <ClientRouter />
-        <LoadingBar />
-    </head>
-    <body>
-        <Header />
-        <main class="home-main">
-            <div class="home-hero">
-                <h1>ThriceCola's Blog</h1>
-                <h3>{SITE_DESCRIPTION}</h3>
-                <p>你是从哪里找到我的呢?</p>
-            </div>
-            <HomeChannels
-                thought={thoughts[0]}
-                blog={blogs[0]}
-                hasMore={blogs.length > 1 || thoughts.length > 1}
-            />
-            <HomeFeed thoughts={thoughts} blogs={blogs} />
-        </main>
-        <Footer />
-        <script>
-            declare global {
-                interface Window {
-                    __homeImgInit?: boolean;
-                }
-            }
+<Page title={SITE_TITLE} description={SITE_DESCRIPTION} mainClass="home-main layout-wide">
+    <div class="home-hero">
+        <h1>ThriceCola's Blog</h1>
+        <h3>{SITE_DESCRIPTION}</h3>
+        <p>你是从哪里找到我的呢?</p>
+    </div>
+    <HomeChannels
+        thought={thoughts[0]}
+        blog={blogs[0]}
+        hasMore={blogs.length > 1 || thoughts.length > 1}
+    />
+    <HomeFeed thoughts={thoughts} blogs={blogs} />
+</Page>
+<script>
+    import { initContentImages, initLqipImages, onceOnPageLoad } from "../scripts/images";
 
-            function initHomeImages() {
-                document
-                    .querySelectorAll("[data-astro-lqip]")
-                    .forEach((wrapper) => {
-                        const img = wrapper.querySelector("img");
-                        if (!img || img.dataset.lqipInit) return;
-                        img.dataset.lqipInit = "1";
-                        if (img.complete) {
-                            wrapper.classList.add("lqip-cached");
-                            img.style.transition = "none";
-                            img.classList.add("loaded");
-                            img.offsetHeight;
-                            img.style.transition = "";
-                        } else {
-                            img.addEventListener(
-                                "load",
-                                () => img.classList.add("loaded"),
-                                {
-                                    once: true,
-                                },
-                            );
-                            img.addEventListener(
-                                "error",
-                                () => img.classList.add("loaded"),
-                                {
-                                    once: true,
-                                },
-                            );
-                        }
-                    });
-                document
-                    .querySelectorAll(".thought-content img")
-                    .forEach((el) => {
-                        const img = el as HTMLImageElement;
-                        if (img.dataset.progressive) return;
-                        img.dataset.progressive = "1";
-                        if (img.complete) {
-                            img.style.transition = "none";
-                            img.classList.add("loaded");
-                            img.offsetHeight;
-                            img.style.transition = "";
-                        } else {
-                            img.addEventListener(
-                                "load",
-                                () => img.classList.add("loaded"),
-                                {
-                                    once: true,
-                                },
-                            );
-                            img.addEventListener(
-                                "error",
-                                () => img.classList.add("loaded"),
-                                {
-                                    once: true,
-                                },
-                            );
-                        }
-                    });
-            }
-
-            initHomeImages();
-            if (!window.__homeImgInit) {
-                window.__homeImgInit = true;
-                document.addEventListener("astro:page-load", initHomeImages);
-                document.addEventListener("home:content", initHomeImages);
-            }
-        </script>
-    </body>
-</html>
+    onceOnPageLoad(
+        "home-images",
+        () => {
+            initLqipImages();
+            initContentImages(".thought-content img");
+        },
+        ["home:content"],
+    );
+</script>

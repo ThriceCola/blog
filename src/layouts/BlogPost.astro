@@ -1,222 +1,138 @@
 ---
 import { Image } from "astro-lqip/components";
 import type { CollectionEntry } from "astro:content";
-import BaseHead from "../components/BaseHead.astro";
-import Footer from "../components/Footer.astro";
 import FormattedDate from "../components/FormattedDate.astro";
-import Header from "../components/Header.astro";
-import LoadingBar from "../components/LoadingBar.astro";
-import { ClientRouter } from "astro:transitions";
+import Page from "./Page.astro";
 
 type Props = CollectionEntry<"blog">["data"];
 
 const { title, description, pubDate, updatedDate, heroImage, heroImagePosition } = Astro.props;
 ---
 
-<html lang="zh-CN">
-    <head>
-        <BaseHead title={title} description={description} />
-        <ClientRouter />
-        <LoadingBar />
-        <style>
-            main {
-                width: 100%;
-                max-width: 720px;
-                margin: 0 auto;
-                padding: 2em 1em 0;
-            }
-            .hero-image {
-                max-width: 720px;
-                width: 100%;
-                margin: 0 auto 2em;
-                overflow: hidden;
-                border: 1px solid var(--semi-accent-color);
-                box-shadow: -6px 8px 2px 1px var(--shadow-color);
-                line-height: 0;
-            }
-            .hero-image img {
-                display: block;
-                width: 100%;
-                height: auto;
-                aspect-ratio: 720 / 360;
-                object-fit: cover;
-            }
-            .prose {
-                width: 100%;
-                max-width: 720px;
-                margin: auto;
-                padding: 1em;
-                color: var(--normal-text-color);
-            }
-            .title {
-                margin-bottom: 1em;
-                padding: 1em 0;
-                text-align: center;
-                line-height: 1.2;
-            }
-            .title h1 {
-                margin: 0 0 0.5em 0;
-                font-size: 2em;
-            }
-            .date {
-                margin-bottom: 0.5em;
-                color: var(--semi-accent-color);
-            }
-            .last-updated-on {
-                font-style: italic;
-                font-size: 0.9em;
-            }
-
-            @media (max-width: 720px) {
-                main {
-                    padding: 1.5em 0.75em 0;
-                }
-                .title h1 {
-                    font-size: 1.5em;
-                }
-                .prose {
-                    padding: 1em 0.5em;
-                }
-                .hero-image {
-                    margin-bottom: 1.25em;
-                }
-                /*.hero-image img {
-					max-height: 280px;
-					object-fit: cover;
-				}*/
-            }
-
-            @media (max-width: 480px) {
-                main {
-                    padding: 1em 0.5em 0;
-                }
-                .title {
-                    padding: 0.75em 0;
-                    margin-bottom: 0.5em;
-                }
-                .title h1 {
-                    font-size: 1.3em;
-                }
-                .prose {
-                    padding: 1em 0.75em;
-                }
-                .hero-image {
-                    margin-bottom: 1em;
-                }
-                /*.hero-image img {
-					max-height: 280px;
-					object-fit: cover;
-				}*/
-            }
-        </style>
-        <style is:global>
-            /* Markdown content images: hidden until fully loaded.
-               Background color serves as a subtle placeholder. */
-            .prose img {
-                opacity: 0;
-                transition: opacity 0.5s ease-out;
-                background: var(--shadow-color);
-            }
-            .prose img.loaded {
-                opacity: 1;
-            }
-        </style>
-    </head>
-
-    <body>
-        <Header />
-        <main>
-            <article>
-                {
-                    heroImage && (
-                        <div class="hero-image">
-                            <Image
-                                src={heroImage}
-                                width={720}
-                                height={360}
-                                alt=""
-                                lqip="base64"
-                                lqipSize={10}
-                                decoding="sync"
-                                style={{ objectPosition: heroImagePosition }}
-                            />
-                        </div>
-                    )
-                }
-                <div class="prose">
-                    <div class="title">
-                        <h1>{title}</h1>
-                        <div class="date">
-                            <FormattedDate date={pubDate} />
-                            {
-                                updatedDate && (
-                                    <div class="last-updated-on">
-                                        Last updated on{" "}
-                                        <FormattedDate date={updatedDate} />
-                                    </div>
-                                )
-                            }
-                        </div>
-                        <hr />
-                    </div>
-                    <slot />
+<Page title={title} description={description} mainClass="post-main">
+    <article>
+        {
+            heroImage && (
+                <div class="hero-image framed-image">
+                    <Image
+                        src={heroImage}
+                        width={720}
+                        height={360}
+                        alt=""
+                        lqip="base64"
+                        lqipSize={10}
+                        decoding="sync"
+                        style={{ objectPosition: heroImagePosition }}
+                    />
                 </div>
-            </article>
-        </main>
-        <Footer />
-        <script>
-                    // Progressive image blur transition for markdown content images.
-                    // astro-lqip images are hidden until loaded (opacity: 0 → 1),
-                    // so the LQIP placeholder is visible during slow-network loading.
-                    function initProgressiveImages(selector) {
-                        document.querySelectorAll(selector).forEach(img => {
-                            if (img.dataset.progressive) return;
-                            img.dataset.progressive = '1';
-                            if (img.complete) {
-                                // Cached image: skip the opacity transition entirely
-                                img.style.transition = 'none';
-                                img.classList.add('loaded');
-                                // Force reflow so the transition-none takes effect,
-                                // then restore the transition for any future state changes
-                                img.offsetHeight;
-                                img.style.transition = '';
-                            } else {
-                                img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
-                                img.addEventListener('error', () => img.classList.add('loaded'), { once: true });
-                            }
-                        });
+            )
+        }
+        <div class="prose">
+            <div class="title">
+                <h1>{title}</h1>
+                <div class="date">
+                    <FormattedDate date={pubDate} />
+                    {
+                        updatedDate && (
+                            <div class="last-updated-on">
+                                Last updated on <FormattedDate date={updatedDate} />
+                            </div>
+                        )
                     }
-                    function initLqipImages() {
-                        document.querySelectorAll('[data-astro-lqip]').forEach(wrapper => {
-                            const img = wrapper.querySelector('img');
-                            if (!img || img.dataset.lqipInit) return;
-                            img.dataset.lqipInit = '1';
-                            if (img.complete) {
-                                // Cached image: hide blur ::after and skip img opacity transition
-                                wrapper.classList.add('lqip-cached');
-                                img.style.transition = 'none';
-                                img.classList.add('loaded');
-                                img.offsetHeight;
-                                img.style.transition = '';
-                            } else {
-                                img.addEventListener('load', () => {
-                                    img.classList.add('loaded');
-                                }, { once: true });
-                                img.addEventListener('error', () => {
-                                    img.classList.add('loaded');
-                                }, { once: true });
-                            }
-                        });
-                    }
-                    function init() {
-                        initLqipImages();
-                        initProgressiveImages('.prose img');
-                    }
-                    init();
-                    if (!window.__blogPostImgInit) {
-                        window.__blogPostImgInit = true;
-                        document.addEventListener('astro:page-load', init);
-                    }
-                </script>
-    </body>
-</html>
+                </div>
+                <hr />
+            </div>
+            <slot />
+        </div>
+    </article>
+</Page>
+
+<style>
+    .hero-image {
+        max-width: 720px;
+        width: 100%;
+        margin: 0 auto 2em;
+        box-shadow: -6px 8px 2px 1px var(--shadow-color);
+    }
+    .prose {
+        width: 100%;
+        max-width: 720px;
+        margin: auto;
+        padding: 1em;
+        color: var(--normal-text-color);
+    }
+    .title {
+        margin-bottom: 1em;
+        padding: 1em 0;
+        text-align: center;
+        line-height: 1.2;
+    }
+    .title h1 {
+        margin: 0 0 0.5em 0;
+        font-size: 2em;
+    }
+    .date {
+        margin-bottom: 0.5em;
+        color: var(--semi-accent-color);
+    }
+    .last-updated-on {
+        font-style: italic;
+        font-size: 0.9em;
+    }
+
+    @media (max-width: 720px) {
+        .title h1 {
+            font-size: 1.5em;
+        }
+        .prose {
+            padding: 1em 0.5em;
+        }
+        .hero-image {
+            margin-bottom: 1.25em;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .title {
+            padding: 0.75em 0;
+            margin-bottom: 0.5em;
+        }
+        .title h1 {
+            font-size: 1.3em;
+        }
+        .prose {
+            padding: 1em 0.75em;
+        }
+        .hero-image {
+            margin-bottom: 1em;
+        }
+    }
+</style>
+<style is:global>
+    main.post-main {
+        width: 100%;
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2em 1em 0;
+    }
+
+    @media (max-width: 720px) {
+        main.post-main {
+            padding: 1.5em 0.75em 0;
+        }
+    }
+
+    @media (max-width: 480px) {
+        main.post-main {
+            padding: 1em 0.5em 0;
+        }
+    }
+</style>
+<script>
+    import { initContentImages, initLqipImages, onceOnPageLoad } from "../scripts/images";
+
+    onceOnPageLoad("blog-post-images", () => {
+        initLqipImages();
+        initContentImages(".prose img");
+    });
+</script>

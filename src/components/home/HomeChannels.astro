@@ -1,6 +1,7 @@
 ---
 import ThoughtChannelCard from "./ThoughtChannelCard.astro";
 import BlogChannelCard from "./BlogChannelCard.astro";
+import HomeEntryLinks from "./HomeEntryLinks.astro";
 import type { CollectionEntry } from "astro:content";
 
 interface Props {
@@ -14,14 +15,7 @@ const { thought, blog, hasMore } = Astro.props;
 
 {/* Mobile-only: list-page entries above content */}
 <div class="home-entries">
-    <a class="entry-card card card--hover" href="/thoughts">
-        <strong>碎碎念</strong>
-        <span>日常与碎片记录</span>
-    </a>
-    <a class="entry-card card card--hover" href="/blog">
-        <strong>文章</strong>
-        <span>阅读一些长文</span>
-    </a>
+    <HomeEntryLinks />
 </div>
 
 <section
@@ -56,14 +50,7 @@ const { thought, blog, hasMore } = Astro.props;
     }
     <div class="channel-guides" data-channel-guides hidden>
         <div class="channel-guides__cards">
-            <a class="entry-card card card--hover" href="/thoughts">
-                <strong>碎碎念</strong>
-                <span>日常与碎片记录</span>
-            </a>
-            <a class="entry-card card card--hover" href="/blog">
-                <strong>文章</strong>
-                <span>阅读一些长文</span>
-            </a>
+            <HomeEntryLinks />
         </div>
         {
             hasMore && (
