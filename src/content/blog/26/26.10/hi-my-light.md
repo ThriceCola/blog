@@ -32,6 +32,12 @@ cardImagePosition: 'center 10%'
     <video src="https://blog-img.thricecola.com/hi-my-light/%E6%BC%AB%E6%BC%AB%E9%95%BF%E5%A4%9C.mp4" controls></video>
 </div>
 
+
+---
+
+
+> 如果你觉得技术描述很无聊，请跳转到 [拾音](#拾音)
+
 ---
 
 # 蓝牙抓包
