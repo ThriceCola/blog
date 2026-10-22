@@ -33,18 +33,19 @@ const cardImgPos = blog.data.cardImage
 		}
 		{
 			cardImgSrc && (
-				<Image
-					class="channel__image"
-					src={cardImgSrc}
-					width={480}
-					height={270}
-					alt=""
-					lqip="base64"
-					lqipSize={10}
-					decoding={latest ? "sync" : "async"}
-					loading={latest ? "eager" : "lazy"}
-					style={{ objectPosition: cardImgPos }}
-				/>
+				<div class="channel__image">
+					<Image
+						src={cardImgSrc}
+						width={480}
+						height={270}
+						alt=""
+						lqip="base64"
+						lqipSize={10}
+						decoding={latest ? "sync" : "async"}
+						loading={latest ? "eager" : "lazy"}
+						style={{ objectPosition: cardImgPos }}
+					/>
+				</div>
 			)
 		}
 		<p class="channel__links">
