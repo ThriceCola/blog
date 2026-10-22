@@ -387,11 +387,19 @@ a.channel__title:visited {
 .channel__image {
     display: block;
     width: 100%;
-    height: auto;
     aspect-ratio: 16 / 9;
     object-fit: cover;
     border: 1px solid var(--semi-accent-color);
     margin-bottom: 0.75em;
+}
+
+/* astro-lqip copies this class onto the wrapper and the img.
+   The frame stays on the wrapper; the img only fills it. */
+img.channel__image {
+    height: 100%;
+    aspect-ratio: auto;
+    border: 0;
+    margin: 0;
 }
 
 .channel__links {
