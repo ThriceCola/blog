@@ -42,3 +42,10 @@ name = "云深不知处"
 url = "https://yunshen.life"
 avatar = "https://avatars.githubusercontent.com/u/168275411?s=96&v=4"
 description = "云深的碎碎念"
+
+
+[wesley-young]
+name = "Young's Toy Box"
+description = "玩具盒"
+url = "https://wesley-young.github.io/"
+avatar = "https://avatars.githubusercontent.com/u/25684570?v=4"
