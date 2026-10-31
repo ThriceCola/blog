@@ -98,18 +98,17 @@ button.entry-card {
     min-height: 0;
 }
 
-/* Gap smaller than the roomy stack (cards + toggle): while the compressed
-   chips + toggle still fit stacked the layout stays stacked and the nav
-   cards compress (is-tight); when that doesn't fit, the bar splits
-   side-by-side — nav cards on the left, toggle stretched on the right
-   (is-compact). When the gap is tall enough for the stacked card pair the
-   bar stays inside the short column and fills the gap exactly (its top
-   meets the gap top, its bottom the taller column's), so the column
-   bottoms stay level: the cards stack vertically (碎碎念 above 文章) and
-   the toggle fills the gap height. When the gap is too tight for that pair
-   — or the columns are already level — there is nothing to fill, so the
-   bar parks below the grid at its natural height as a full-width bar with
-   the nav cards side by side (is-parked). */
+/* The guides bar fills the height gap under the short column. Its shape
+   depends on how much room the gap leaves: a roomy stack of both nav cards
+   with the toggle under them; compressed chips + toggle stacked (is-tight);
+   or nav cards stacked in the left half with the toggle stretched on the
+   right (is-compact). Every in-gap variant starts where the short column's
+   content ends and ends level with the taller column, so the column bottoms
+   stay level. When even the split bar is too tall — or the columns are
+   already level — the bar parks below the grid (is-parked). There the two
+   halves share the bar's bottom edge, and the half under the short column
+   is stretched upward by the fill sync to meet that column's content, so
+   the gap is bridged instead of left empty. */
 .channel-guides.is-compact {
     grid-column: 1 / -1;
     /* parked case: spans both grid columns */
@@ -139,7 +138,10 @@ button.entry-card {
 }
 
 /* Parked bar: the nav cards sit side by side, each keeping its
-   description. */
+   description. Both halves stretch to the bar's height by default; the
+   fill sync bottom-anchors the half under the short column and gives it a
+   taller height, so it bridges the leftover gap upward without pushing the
+   bar taller. */
 .channel-guides.is-compact.is-parked .channel-guides__cards {
     min-width: 0;
     grid-template-columns: 1fr 1fr;
