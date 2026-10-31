@@ -15,6 +15,16 @@ const renderedPosts = await Promise.all(
         return { id: post.id, data: post.data, Content };
     }),
 );
+
+// Cards alternate between two independent columns instead of sharing grid
+// rows: a tall card next to a short one would otherwise leave an empty band
+// under the short one, above the next row. The inline `order` puts the cards
+// back into date order when the columns collapse into a single one.
+const indexedPosts = renderedPosts.map((post, index) => ({ ...post, index }));
+const columns = [
+    indexedPosts.filter((post) => post.index % 2 === 0),
+    indexedPosts.filter((post) => post.index % 2 === 1),
+];
 ---
 
 <Page
@@ -28,6 +38,13 @@ const renderedPosts = await Promise.all(
                 grid-template-columns: 1fr 1fr;
                 gap: 1.5em;
                 align-items: start;
+            }
+
+            .feed-col {
+                display: flex;
+                flex-direction: column;
+                gap: 1.5em;
+                min-width: 0;
             }
 
             .thought-card {
@@ -112,6 +129,12 @@ const renderedPosts = await Promise.all(
                 #thoughts-feed {
                     grid-template-columns: 1fr;
                 }
+
+                /* One column: let the cards back into the feed so their
+                   `order` (date order) sorts them. */
+                .feed-col {
+                    display: contents;
+                }
             }
 
             @media (max-width: 480px) {
@@ -135,22 +158,28 @@ const renderedPosts = await Promise.all(
 
             <section id="thoughts-feed">
                 {
-                    renderedPosts.map((post, i) => (
-                        <article
-                            class:list={[
-                                "thought-card",
-                                "card",
-                                "card--hover",
-                                i >= BATCH && "hidden-post",
-                            ]}
-                        >
-                            <p class="thought-date">
-                                <FormattedDate date={post.data.pubDate} />
-                            </p>
-                            <div class="thought-body">
-                                <post.Content />
-                            </div>
-                        </article>
+                    columns.map((column) => (
+                        <div class="feed-col">
+                            {column.map((post) => (
+                                <article
+                                    class:list={[
+                                        "thought-card",
+                                        "card",
+                                        "card--hover",
+                                        post.index >= BATCH && "hidden-post",
+                                    ]}
+                                    data-index={post.index}
+                                    style={`order:${post.index}`}
+                                >
+                                    <p class="thought-date">
+                                        <FormattedDate date={post.data.pubDate} />
+                                    </p>
+                                    <div class="thought-body">
+                                        <post.Content />
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
                     ))
                 }
             </section>
@@ -179,6 +208,8 @@ const renderedPosts = await Promise.all(
             sentinel,
             end: feedEnd,
             cardSelector: ".thought-card.hidden-post",
+            // The feed is ordered by column, so reveal in date order.
+            orderOf: (card) => Number(card.dataset.index),
             onReveal: (card) => initContentImages(".thought-body img", card),
         });
     }

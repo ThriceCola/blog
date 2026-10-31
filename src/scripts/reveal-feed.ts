@@ -5,12 +5,16 @@ export function revealFeed(options: {
 	cardSelector: string;
 	batch?: number;
 	onReveal?: (card: HTMLElement) => void;
+	/** Date/reading order of a card when the DOM is laid out column by column. */
+	orderOf?: (card: HTMLElement) => number;
 }) {
-	const { feed, sentinel, end, cardSelector, batch = 6, onReveal } = options;
+	const { feed, sentinel, end, cardSelector, batch = 6, onReveal, orderOf } =
+		options;
 	if (feed.dataset.bound) return;
 	feed.dataset.bound = "1";
 
 	const cards = [...feed.querySelectorAll<HTMLElement>(cardSelector)];
+	if (orderOf) cards.sort((a, b) => orderOf(a) - orderOf(b));
 	let remaining = cards.length;
 	let loading = false;
 
